@@ -1,43 +1,34 @@
 ---
 prev: coll2.textile
 next: concurrency.textile
-title: Testing with specs
+title: Testing with ScalaTest
 layout: post
 ---
 
-This lesson covers testing with Specs, a Behavior-Driven Design (BDD) Framework for Scala.
+This lesson covers testing with <a href="http://www.scalatest.org/">ScalaTest</a>, a flexible Scala testing framework. There are many ways of using ScalaTest, as it doesn't impose a testing philosophy on the user, so we will only talk about how we use it at Brigade.
 
-* "extends Specification":#example
-** nested examples
-* "Execution Model":#scope
+* "WordSpec":#example
 * "Setup and TearDown":#setup
-** doFirst
-** doBefore
-** doAfter
 * "Matchers":#matchers
-** mustEqual
-** contains
-** sameSize?
-** Write your own
 * "Mocks":#mocks
 * "Spies":#spies
-* "run in sbt":#sbt
+* "run with mvn":#mvn
 
 
-h2(#example). extends Specification
+h2(#example). WordSpec
 
-Let's just jump in.
+We chose to use WordSpec because of its similarity to RSpec. We use the Matchers trait to express assertions in a more readable way. Let's just jump in.
 
 <pre>
-import org.specs._
+import org.scalatest.{Matchers, WordSpec}
 
-object ArithmeticSpec extends Specification {
+class ArithmeticSpec extends WordSpec with Matchers {
   "Arithmetic" should {
     "add two numbers" in {
-      1 + 1 mustEqual 2
+      1 + 1 should equal(2)
     }
     "add three numbers" in {
-      1 + 1 + 1 mustEqual 3
+      1 + 1 + 1 should equal(3)
     }
   }
 }
@@ -49,43 +40,26 @@ object ArithmeticSpec extends Specification {
 
 *add two numbers* and *add three numbers* are examples.
 
-@mustEqual@ indicates an *expectation*
+@should equal@ indicates an *expectation*
 
-@1 mustEqual 1@ is a common placeholder *expectation* before you start writing real tests.  All examples should have at least one expectation.
+@1 should equal(1)@ is a common placeholder *expectation* before you start writing real tests.  All examples should have at least one expectation.
 
 h3. Duplication
 
 Notice how two tests both have @add@ in their name?  We can get rid of that by *nesting* expectations.
 
 <pre>
-import org.specs._
+import org.scalatest.{Matchers, WordSpec}
 
-object ArithmeticSpec extends Specification {
+class ArithmeticSpec extends WordSpec with Matchers {
   "Arithmetic" should {
     "add" in {
       "two numbers" in {
-        1 + 1 mustEqual 2
+        1 + 1 should equal(2)
       }
       "three numbers" in {
-        1 + 1 + 1 mustEqual 3
+        1 + 1 + 1 should equal(3)
       }
-    }
-  }
-}
-</pre>
-
-h2(#scope). Execution Model
-
-<pre>
-object ExecSpec extends Specification {
-  "Mutations are isolated" should {
-    var x = 0
-    "x equals 1 if we set it." in {
-      x = 1
-      x mustEqual 1
-    }
-    "x is the default value if we don't change it" in {
-      x mustEqual 0
     }
   }
 }
@@ -93,44 +67,60 @@ object ExecSpec extends Specification {
 
 h2(#setup). Setup, Teardown
 
-h3. doBefore & doAfter
+h3. BeforeAndAfterAll
+
+The BeforeAndAfterAll trait can be used to perform side effects before and/or after all tests run.
 
 <pre>
-"my system" should {
-  doBefore { resetTheSystem() /** user-defined reset function */ }
-  "mess up the system" in {...}
-  "and again" in {...}
-  doAfter { cleanThingsUp() }
+class ASpec extends WordSpec with Matchers with BeforeAndAfterAll {
+  override def beforeAll(): Unit = {
+    setup() // setup things before all tests
+  }
+
+  override def afterAll(): Unit = {
+    tearDown() // cleanup after all tests
+  }
+
+  "my code" should {
+    "do stuff" in {...}
+  }
 }
 </pre>
 
-*NOTE* @doBefore@/@doAfter@ are only run on leaf examples.
+h3. BeforeAndAfterEach
 
-h3. doFirst & doLast
-
-@doFirst@/@doLast@ is for single-time setup. (need example, I don't use this)
+Similarly, BeforeAndAfterEach can be used to perform side effects before and/or after each test.
 
 <pre>
-"Foo" should {
-  doFirst { openTheCurtains() }
-  "test stateless methods" in {...}
-  "test other stateless methods" in {...}
-  doLast { closeTheCurtains() }
+class BSpec extends WordSpec with Matchers with BeforeAndAfterAll {
+  val buffer = mutable.ArrayBuffer[Int]()
+
+  override def before(): Unit = {
+    buffer += 1 // add an element to start
+  }
+
+  override def afterAll(): Unit = {
+    buffer.clear()
+  }
+
+  "my code" should {
+    "do stuff with buffer" in {...}
+  }
 }
 </pre>
 
 h2(#matchers). Matchers
 
-You have data, you want to make sure it's right. Let's tour the most commonly used matchers. (See Also "Matchers Guide":http://code.google.com/p/specs/wiki/MatchersGuide)
+You have data, you want to make sure it's right. Let's tour commonly used matchers.
 
-h3. mustEqual
+h3.
 
-We've seen several examples of mustEqual already.
+We've seen several examples of <code>should equal</code> already.
 
 <pre>
-1 mustEqual 1
+1 should equal(1)
 
-"a" mustEqual "a"
+"a" should equal("a")
 </pre>
 
 Reference equality, value equality.
@@ -138,57 +128,55 @@ Reference equality, value equality.
 h3. elements in a Sequence
 
 <pre>
-val numbers = List(1, 2, 3)
+val numbers = Seq(1, 2, 3)
 
-numbers must contain(1)
-numbers must not contain(4)
+numbers should contain(1)
+numbers should not contain(4)
 
-numbers must containAll(List(1, 2, 3))
-numbers must containInOrder(List(1, 2, 3))
-
-List(1, List(2, 3, List(4)), 5) must haveTheSameElementsAs(List(5, List(List(4), 2, 3), 1))
+numbers should contain allOf(1, 2, 3)
+numbers should contain theSameElementsAs Seq(1, 2, 3)
+numbers should contain inOrderOnly(1, 2, 3)
+numbers should contain theSameElementsInOrderAs Seq(1, 2, 3)
 </pre>
 
 
 h3. Items in a Map
 
 <pre>
-map must haveKey(k)
-map must notHaveKey(k)
+map should contain key(k)
+map should not contain key(k)
 
-map must haveValue(v)
-map must notHaveValue(v)
+map should contain value(v)
+map should not contain value(v)
 </pre>
 
 h3. Numbers
 
 <pre>
-a must beGreaterThan(b)
-a must beGreaterThanOrEqualTo(b)
+a should be > b
+a should be >= b
 
-a must beLessThan(b)
-a must beLessThanOrEqualTo(b)
+a should be < b
+a should be <= b
 
-a must beCloseTo(b, delta)
+a should equal(b +- delta)
 </pre>
 
 
 h3. Options
 
 <pre>
-a must beNone
+a shouldEqual None
 
-a must beSome[Type]
+a shouldBe defined
 
-a must beSomething
-
-a must beSome(value)
+a should equal(Some(value))
 </pre>
 
-h3. throwA
+h3. Exceptions
 
 <pre>
-a must throwA[WhateverException]
+a [IndexOutOfBoundsException] should be thrownBy s.charAt(-1)
 </pre>
 
 This is shorter than a try catch with a fail in the body.
@@ -196,17 +184,23 @@ This is shorter than a try catch with a fail in the body.
 You can also expect a specific message
 
 <pre>
-a must throwA(WhateverException("message"))
+val thrown = the [IndexOutOfBoundsException] thrownBy s.charAt(-1)
+thrown.getMessage should equal("message")
 </pre>
 
 You can also match on the exception:
 
 <pre>
-a must throwA(new Exception) like {
-  case Exception(m) => m.startsWith("bad")
-}
+the [IndexOutOfBoundsException] thrownBy {
+  s.charAt(-1)
+} should have message "String index out of range: -1"
 </pre>
 
+You can also state that no exception should be thrown by some code, like this:
+
+<pre>
+noException should be thrownBy s.charAt(1)
+</pre>
 
 h3. Write your own Matchers
 
@@ -220,11 +214,11 @@ h4. As a val
 "A matcher" should {
   "be created as a val" in {
     val beEven = new Matcher[Int] {
-      def apply(n: => Int) = {
-        (n % 2 == 0, "%d is even".format(n), "%d is odd".format(n))
+      def apply(n: Int) = {
+        MatchResult(n % 2 == 0, "%d is odd".format(n), "%d is even".format(n))
       }
     }
-    2 must beEven
+    2 should beEven
   }
 }
 </pre>
@@ -234,44 +228,48 @@ The contract is to return a tuple containing whether the expectation is true, an
 h4. As a case class
 
 <pre>
-case class beEven(b: Int) extends Matcher[Int]() {
-  def apply(n: => Int) =  (n % 2 == 0, "%d is even".format(n), "%d is odd".format(n))
+case class BeEvenMatcher(b: Int) extends Matcher[Int]() {
+  def apply(n: Int) = MatchResult(n % 2 == 0, "%d is odd".format(n), "%d is even".format(n))
 }
 </pre>
 
-Using a case class makes it more shareable.
+Using a case class makes it more shareable. The Scalatest docs have suggestions on how to organize custom matchers in a trait <a href="http://www.scalatest.org/user_guide/using_matchers#usingCustomMatchers">here</a>.
 
 h2(#mocks). Mocks
 
 <pre>
-import org.specs.Specification
-import org.specs.mock.Mockito
+import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.mock.MockitoSugar
+import org.mockito.Mockito._
 
 abstract class Foo[T] {
   def get(i: Int): T
 }
 
-object MockExampleSpec extends Specification with Mockito {
-  val m = mock[Foo[String]]
+class MockExampleSpec extends WordSpec with Matchers with MockitoSugar {
+  "a mock" should {
+    "stub and verify" in {
+      val m = mock[Foo[String]]
 
-  m.get(0) returns "one"
+      when(m.get(0)) thenReturn "one"
 
-  m.get(0)
+      m.get(0)
 
-  there was one(m).get(0)
-
-  there was no(m).get(1)
+      verify(m).get(0)
+      verify(m, never()).get(1)
+    }
+  }
 }
 </pre>
 
-*See Also* "Using Mockito":http://code.google.com/p/specs/wiki/UsingMockito
+*See Also* "Using Mockito":http://mockito.github.io/mockito/docs/current/org/mockito/Mockito.html
 
 h2(#spies). Spies
 
 Spies can also be used in order to do some "partial mocking" of real objects:
 
 <pre>
-val list = new LinkedList[String]
+val list = Seq[String].empty
 val spiedList = spy(list)
 
 // methods can be stubbed on a spy
@@ -299,18 +297,11 @@ doReturn("one").when(spiedList).get(0)
 </pre>
 
 
-h2(#sbt). Run individual specs in sbt
+h2(#mvn). Run individual specs with mvn
 
 
 <pre>
-> test-only com.twitter.yourservice.UserSpec
+mvn test -DwildcardSuites=brigade.foo.bar.SomeSpec
 </pre>
 
 Will run just that spec.
-
-
-<pre>
-> ~ test-only com.twitter.yourservice.UserSpec
-</pre>
-
-Will run that test in a loop, with each file modification triggering a test run.

@@ -2,7 +2,7 @@ gems:
 - jekyll-textile-converter
 permalink: none
 lessons:
-  - 
+  -
     title: Basics
     title_ko: 기초
     title_ru: Основы
@@ -83,7 +83,7 @@ lessons:
     desc_ru: Рассказ о библиотеке коллекций Scala
     desc_zh_cn: Scala Collections库指南
   -
-    title: Testing with specs
+    title: Testing with ScalaTest
     title_ko: specs로 테스트하기
     title_ru: Тестирование с помощью specs
     title_zh_cn: 使用specs测试
