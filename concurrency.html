@@ -12,7 +12,7 @@
     <![endif]-->
 
     <!-- Le styles -->
-    <link rel="stylesheet" href="/scala_school/bootstrap-1.1.0.min.css">
+    <link rel="stylesheet" href="bootstrap-1.1.0.min.css">
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -291,7 +291,7 @@ class InvertedIndex(val userMap: mutable.Map[String, User]) {
 <p>I&#8217;ve left out how to get users out of our index for now.  We&#8217;ll get to that later.</p>
 <h2 id="solutions">Let&#8217;s make it safe</h2>
 <p>In our inverted index example above, userMap is not guaranteed to be safe.  Multiple clients could try to add items at the same time and have the same kinds of visibility errors we saw in our first <code>Person</code> example.</p>
-<p>Since userMap isn&#8217;t thread-safe, how we do we keep only a single thread at a time mutating it?</p>
+<p>Since userMap isn&#8217;t thread-safe, how do we keep only a single thread at a time mutating it?</p>
 <p>You might consider locking on userMap while adding.</p>
 <pre>
 def add(user: User) {

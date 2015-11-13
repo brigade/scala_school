@@ -12,7 +12,7 @@
     <![endif]-->
 
     <!-- Le styles -->
-    <link rel="stylesheet" href="/scala_school/bootstrap-1.1.0.min.css">
+    <link rel="stylesheet" href="bootstrap-1.1.0.min.css">
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -239,7 +239,7 @@ case class beEven(b: Int) extends Matcher[Int]() {
 import org.specs.Specification
 import org.specs.mock.Mockito
 
-class Foo[T] {
+abstract class Foo[T] {
   def get(i: Int): T
 }
 

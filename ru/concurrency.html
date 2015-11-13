@@ -12,7 +12,7 @@
     <![endif]-->
 
     <!-- Le styles -->
-    <link rel="stylesheet" href="/scala_school/bootstrap-1.1.0.min.css">
+    <link rel="stylesheet" href="bootstrap-1.1.0.min.css">
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -226,7 +226,7 @@ class Person(@volatile var name: String) {
 }
 </pre>
 <h4>AtomicReference</h4>
-<p>Также в Java 5 был добвлен целый набор низкоуровневых примитивов для параллельных вычислений. Одним из них является класс <code>AtomicReference</code></p>
+<p>Также в Java 5 был добавлен целый набор низкоуровневых примитивов для параллельных вычислений. Одним из них является класс <code>AtomicReference</code></p>
 <pre>
 import java.util.concurrent.atomic.AtomicReference
 
@@ -257,7 +257,7 @@ println("both workers finished!")
 <h4>AtomicInteger/Long</h4>
 <p>Для испльзования Int и Long во многих задачах были добавлены <code>AtomicInteger</code> и <code>AtomicLong</code>.</p>
 <h4>AtomicBoolean</h4>
-<p>Я думаю ненужно объяснять зачем это нужно.</p>
+<p>Я думаю не нужно объяснять зачем это нужно.</p>
 <h4>ReadWriteLocks</h4>
 <p><code>ReadWriteLock</code> позволяет вам блокировать потоки читателей и писателей.  Читатель блокируется, когда писатель установил блокировку.</p>
 <h2 id="example">Давайте построим небезопасный поисковый движок</h2>
@@ -302,7 +302,7 @@ def add(user: User) {
   }
 }
 </pre>
-<p>К сожалению, это слишком грубо. Всегда старайтесь сделать так много дорогостоящей работы за пределами мьютекса насколько это возможно. Помните, что я говорил, блокировка дожна быть дешевой, если нет никаких разногласий. Если вы сделаете меньше работы внутри блока, будет меньше разногласий.</p>
+<p>К сожалению, это слишком грубо. Всегда старайтесь сделать так много дорогостоящей работы за пределами мьютекса насколько это возможно. Помните, что я говорил, блокировка должна быть дешевой, если нет никаких разногласий. Если вы сделаете меньше работы внутри блока, будет меньше разногласий.</p>
 <pre>
 def add(user: User) {
   // tokenizeName как было измерено, самая дорога операция
@@ -316,7 +316,7 @@ def add(user: User) {
 }
 </pre>
 <h2>SynchronizedMap</h2>
-<p>Мы может смешать синронизацию с изменяющимся HashMap, используя трейт SynchronizedMap.</p>
+<p>Мы может смешать сихнронизацию с изменяющимся HashMap, используя трейт SynchronizedMap.</p>
 <p>Мы можем расширить наш существующий InvertedIndex, давая пользователям простой способ построения синхронизированного индекса.</p>
 <pre>
 import scala.collection.mutable.SynchronizedMap
