@@ -10,7 +10,7 @@ This lesson covers:
 * "Function Composition":#composition
 ** compose
 ** andThen
-* "Currying vs Partial Application":#curryvspartial
+* "Case Statements":#casestatements
 * "PartialFunctions":#PartialFunction
 ** range and domain
 ** composition with orElse
@@ -52,15 +52,13 @@ scala> fAndThenG("yay")
 res1: java.lang.String = g(f(yay))
 </pre>
 
-h2(#curryvspartial). Currying vs Partial Application
+h2(#casestatements). Case Statements
 
-h3. case statements
-
-h4. So just what are case statements?
+h3. So just what are case statements?
 
 It's a subclass of function called a PartialFunction.
 
-h4. What is a collection of multiple case statements?
+h3. What is a collection of multiple case statements?
 
 They are multiple PartialFunctions composed together.
 
