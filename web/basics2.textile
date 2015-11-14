@@ -138,27 +138,27 @@ package com.twitter.example
 
 at the top of a file will declare everything in the file to be in that package.
 
-Values and functions cannot be outside of a class or object.  Objects are a useful tool for organizing static functions.
+Values and functions cannot be outside of a class or object.  Objects are a useful tool for organizing static functions and fields.
 
 <pre>
 package com.twitter.example
 
-object colorHolder {
-  val BLUE = "Blue"
-  val RED = "Red"
+object ColorHolder {
+  val Blue = "Blue"
+  val Red = "Red"
 }
 </pre>
 
-Now you can access the members directly
+Now you can access the members directly. Note that static values are formatted as capitalized camel-case.
 
 <pre>
-println("the color is: " + com.twitter.example.colorHolder.BLUE)
+println("the color is: " + com.twitter.example.ColorHolder.Blue)
 </pre>
 
 Notice what the scala repl says when you define this object:
 
 <pre>
-scala> object colorHolder {
+scala> object ColorHolder {
      |   val Blue = "Blue"
      |   val Red = "Red"
      | }
