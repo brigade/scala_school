@@ -49,24 +49,36 @@ Scala is not just a nicer Java.  You should learn it with a fresh mind- you will
 
 h3. Get Scala
 
-Scala School's examples work with "Scala 2.9.x":http://www.scala-lang.org/download/2.9.3.html . If you use Scala 2.10.x or newer, _most_ examples work OK, but not all.
+Scala School's examples should work with Scala 2.11. This is the same version that we use for services at Brigade. Please follow the <a href="https://brigade.atlassian.net/wiki/display/EN/Data+Team+Onboarding">onboarding instructions</a> to set up Java, Scala, Maven, and Thrift.
 
 h3. Start the Interpreter
 
-Start the included <code>sbt console</code>.
+You can start a scala console that includes all project dependencies by entering <code>mvn scala:console</code> into the command line from the root project directory.
 
 <pre>
-$ sbt console
-
-[...]
-
-Welcome to Scala version 2.8.0.final (Java HotSpot(TM) 64-Bit Server VM, Java 1.6.0_20).
+$ mvn scala:console
+[...build output...]
+Welcome to Scala version 2.11.4 (Java HotSpot(TM) 64-Bit Server VM, Java 1.7.0_71).
 Type in expressions to have them evaluated.
 Type :help for more information.
 
 scala>
 </pre>
 
+If you don't have Maven set up, or don't have a maven project to work with, you can start the Scala REPL with <code>scala</code>.
+
+<pre>
+$ scala
+Welcome to Scala version 2.11.4 (Java HotSpot(TM) 64-Bit Server VM, Java 1.7.0_71).
+Type in expressions to have them evaluated.
+Type :help for more information.
+
+scala>
+</pre>
+
+<em>Tip:</em> If you want to copy/paste examples from these lessons into the console, enter <code>:paste</code> into the console. This will enter "Paste Mode", where you can paste your code, and do ctr-D to finish.
+
+Alternatively, if you have IntelliJ set up, you can create a Scala Worksheet under the src/main/scala directory of your project. This has an interactive mode which will run your code live.
 
 h2(#expressions). Expressions
 
@@ -253,6 +265,16 @@ scala> capitalizeAll("rarity", "applejack")
 res2: Seq[String] = ArrayBuffer(Rarity, Applejack)
 </pre>
 
+If you want to pass an iterable to such a function, you can use the splat operator <code>:_*</code>:
+
+<pre>
+scala> val params = Seq("rarity", "applejack")
+params: Seq[String] = List(rarity, applejack)
+
+scala> capitalizeAll(params: _*)
+res2: Seq[String] = List(Rarity, Applejack)
+</pre>
+
 h2(#class). Classes
 
 <pre>
@@ -283,13 +305,14 @@ class Calculator(brand: String) {
   /**
    * A constructor.
    */
-  val color: String = if (brand == "TI") {
-    "blue"
-  } else if (brand == "HP") {
-    "black"
-  } else {
-    "white"
-  }
+  val color: String =
+    if (brand == "TI") {
+      "blue"
+    } else if (brand == "HP") {
+      "black"
+    } else {
+      "white"
+    }
 
   // An instance method.
   def add(m: Int, n: Int): Int = m + n
@@ -306,7 +329,12 @@ calc: Calculator = Calculator@1e64cc4d
 
 scala> calc.color
 res0: String = black
+
+scala> calc.brand
+res1: String = "HP"
 </pre>
+
+Note that by default all class parameters are
 
 h3. Expressions
 
