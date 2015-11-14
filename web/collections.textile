@@ -45,18 +45,38 @@ numbers: Array[Int] = Array(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
 scala> numbers(3) = 10
 </pre>
 
+h2(#Seqs). Seqs
+
+Seqs preserve order, can contain duplicates, and are immutable (by default). Note that there are actually three different kinds of Seqs: scala.collection.Seq (trait), scala.collection.mutable.Seq, scala.collection.immutable.Seq. The latter is used by default. Note that List and other collections implement the Seq trait, so it's good practice to default to using it for immutable, ordered lists of things.
+
+<pre>
+scala> val numbers = Seq(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
+numbers: Seq[Int] = Seq(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
+
+scala> numbers(3) = 10
+<console>:9: error: value update is not a member of Seq[Int]
+              numbers(3) = 10
+</pre>
+
+
 h2(#Lists). Lists
 
-Lists preserve order, can contain duplicates, and are immutable.
+Lists preserve order, can contain duplicates, and are immutable. They are backed by a linked-list implementation, which is popular in functional programming because it is a <a href="https://en.wikipedia.org/wiki/Persistent_data_structure">persistent data structure</a>. It also enables some cool pattern matching:
 
 <pre>
 scala> val numbers = List(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
 numbers: List[Int] = List(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
 
-scala> numbers(3) = 10
-<console>:9: error: value update is not a member of List[Int]
-              numbers(3) = 10
+numbers match {
+  case head :: tail =>
+    // prints "head: 1, tail: List(2, 3, 4, 5, 1, 2, 3, 4, 5)"
+    println(s"head: $head, tail: $tail")
+  case Nil =>
+    println("empty list!")
+}
 </pre>
+
+Note that <code>Nil</code> is equivalent to an empty List.
 
 h2(#Sets). Sets
 
@@ -192,7 +212,7 @@ val result = res1 match {
 
 h1(#combinators). Functional Combinators
 
-<code>List(1, 2, 3) map squared</code> applies the function <code>squared</code> to the elements of the list, returning a new list, perhaps <code>List(1, 4, 9)</code>. We call operations like <code>map</code> <em>combinators</em>. (If you'd like a better definition, you might like <a href="http://stackoverflow.com/questions/7533837/explanation-of-combinators-for-the-working-man">Explanation of combinators</a> on Stackoverflow.) Their most common use is on the standard data structures.
+<code>List(1, 2, 3).map { squared }</code> applies the function <code>squared</code> to the elements of the list, returning a new list, perhaps <code>List(1, 4, 9)</code>. We call operations like <code>map</code> <em>combinators</em>. (If you'd like a better definition, you might like <a href="http://stackoverflow.com/questions/7533837/explanation-of-combinators-for-the-working-man">Explanation of combinators</a> on Stackoverflow.) Their most common use is on the standard data structures.
 
 h2(#map). map
 
@@ -202,7 +222,7 @@ Evaluates a function over each element in the list, returning a list with the sa
 scala> val numbers = List(1, 2, 3, 4)
 numbers: List[Int] = List(1, 2, 3, 4)
 
-scala> numbers.map((i: Int) => i * 2)
+scala> numbers.map { (i: Int) => i * 2 }
 res0: List[Int] = List(2, 4, 6, 8)
 </pre>
 
@@ -213,7 +233,7 @@ or pass in a function (the Scala compiler automatically converts our method to a
 scala> def timesTwo(i: Int): Int = i * 2
 timesTwo: (i: Int)Int
 
-scala> numbers.map(timesTwo)
+scala> numbers.map { timesTwo }
 res0: List[Int] = List(2, 4, 6, 8)
 </pre>
 
@@ -222,7 +242,7 @@ h2(#foreach). foreach
 foreach is like map but returns nothing. foreach is intended for side-effects only.
 
 <pre>
-scala> numbers.foreach((i: Int) => i * 2)
+scala> numbers.foreach { (i: Int) => i * 2 }
 </pre>
 
 returns nothing.
@@ -230,16 +250,16 @@ returns nothing.
 You can try to store the return in a value but it'll be of type Unit (i.e. void)
 
 <pre>
-scala> val doubled = numbers.foreach((i: Int) => i * 2)
+scala> val doubled = numbers.foreach { (i: Int) => i * 2 }
 doubled: Unit = ()
 </pre>
 
 h2(#filter). filter
 
-removes any elements where the function you pass in evaluates to false.  Functions that return a Boolean are often called predicate functions.
+Constructs a new collection with elements where the function passed in evalutes to true.  Functions that return a Boolean are often called predicate functions.
 
 <pre>
-scala> numbers.filter((i: Int) => i % 2 == 0)
+scala> numbers.filter { (i: Int) => i % 2 == 0 }
 res0: List[Int] = List(2, 4)
 </pre>
 
@@ -247,7 +267,7 @@ res0: List[Int] = List(2, 4)
 scala> def isEven(i: Int): Boolean = i % 2 == 0
 isEven: (i: Int)Boolean
 
-scala> numbers.filter(isEven)
+scala> numbers.filter { isEven }
 res2: List[Int] = List(2, 4)
 </pre>
 
@@ -266,7 +286,7 @@ h2(#partition). partition
 
 <pre>
 scala> val numbers = List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-scala> numbers.partition(_ % 2 == 0)
+scala> numbers.partition { _ % 2 == 0 }
 res0: (List[Int], List[Int]) = (List(2, 4, 6, 8, 10),List(1, 3, 5, 7, 9))
 </pre>
 
@@ -275,7 +295,7 @@ h2(#find). find
 find returns the first element of a collection that matches a predicate function.
 
 <pre>
-scala> numbers.find((i: Int) => i > 5)
+scala> numbers.find { (i: Int) => i > 5 }
 res0: Option[Int] = Some(6)
 </pre>
 
@@ -291,14 +311,14 @@ res0: List[Int] = List(6, 7, 8, 9, 10)
 <code>dropWhile</code> removes the first elements that match a predicate function. For example, if we <code>dropWhile</code> odd numbers from our list of numbers, <code>1</code> gets dropped (but not <code>3</code> which is "shielded" by <code>2</code>).
 
 <pre>
-scala> numbers.dropWhile(_ % 2 != 0)
+scala> numbers.dropWhile { _ % 2 != 0 }
 res0: List[Int] = List(2, 3, 4, 5, 6, 7, 8, 9, 10)
 </pre>
 
 h2(#fold). foldLeft
 
 <pre>
-scala> numbers.foldLeft(0)((m: Int, n: Int) => m + n)
+scala> numbers.foldLeft(0) { (m: Int, n: Int) => m + n }
 res0: Int = 55
 </pre>
 
@@ -358,18 +378,18 @@ flatMap is a frequently used combinator that combines mapping and flattening. fl
 scala> val nestedNumbers = List(List(1, 2), List(3, 4))
 nestedNumbers: List[List[Int]] = List(List(1, 2), List(3, 4))
 
-scala> nestedNumbers.flatMap(x => x.map(_ * 2))
+scala> nestedNumbers.flatMap { x => x.map(_ * 2) }
 res0: List[Int] = List(2, 4, 6, 8)
 </pre>
 
 Think of it as short-hand for mapping and then flattening:
 
 <pre>
-scala> nestedNumbers.map((x: List[Int]) => x.map(_ * 2)).flatten
+scala> nestedNumbers.map { (x: List[Int]) => x.map(_ * 2) }.flatten
 res1: List[Int] = List(2, 4, 6, 8)
 </pre>
 
-that example calling map and then flatten is an example of the "combinator"-like nature of these functions.
+That example calling map and then flatten is an example of the "combinator"-like nature of these functions.
 
 *See Also* Effective Scala has opinions about <a href="http://twitter.github.com/effectivescala/#Functional programming-`flatMap`">flatMap</a>.
 
@@ -406,7 +426,7 @@ extensions: scala.collection.immutable.Map[String,Int] = Map((steve,100), (bob,1
 Now filter out every entry whose phone extension is lower than 200.
 
 <pre>
-scala> extensions.filter((namePhone: (String, Int)) => namePhone._2 < 200)
+scala> extensions.filter { (namePhone: (String, Int)) => namePhone._2 < 200 }
 res0: scala.collection.immutable.Map[String,Int] = Map((steve,100), (bob,101))
 </pre>
 
@@ -415,7 +435,7 @@ Because it gives you a tuple, you have to pull out the keys and values with thei
 Lucky us, we can actually use a pattern match to extract the key and value nicely.
 
 <pre>
-scala> extensions.filter({case (name, extension) => extension < 200})
+scala> extensions.filter { case (name, extension) => extension < 200 }
 res0: scala.collection.immutable.Map[String,Int] = Map((steve,100), (bob,101))
 </pre>
 
