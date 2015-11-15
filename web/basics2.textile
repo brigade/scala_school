@@ -13,6 +13,7 @@ This lesson covers:
 * "pattern matching":#match
 * "case classes":#caseclass
 * "try-catch-finally":#exception
+* "Exercise":#exercise
 
 h2(#apply). apply methods
 
@@ -328,3 +329,12 @@ val result: Int = try {
 This is not an example of excellent programming style, just an example of try-catch-finally resulting in expressions like most everything else in Scala.
 
 Finally will be called after an exception has been handled and is not part of the expression.
+
+h2(#exercise). Exercise
+
+Write a function that uses pattern matching to print the name of the name of a <code>Calculator</code> if it's one of "hp", "ti", or "casio". If it's none of those, print an error message. Use the following definition of <code>Calculator</code>:
+
+<pre>
+case class Calculator(brand: String, model: String)
+</pre>
+

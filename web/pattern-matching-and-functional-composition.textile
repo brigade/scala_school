@@ -15,6 +15,7 @@ This lesson covers:
 ** range and domain
 ** composition with orElse
 * "What is a case statement?":#case
+* "Exercise":#exercise
 
 h2(#composition). Function Composition
 
@@ -143,3 +144,7 @@ Why does this work?
 filter takes a function. In this case a predicate function of (PhoneExt) => Boolean.
 
 A PartialFunction is a subtype of Function so filter can also take a PartialFunction!
+
+h2(#exercise). Exercise
+
+Define a case class <code>AlignmentStats</code> which contains a positions aligned count and a positions misaligned count. Use the <code>collect</code> combinator to transform a <code>Seq[AlignmentStats]</code> into a Seq of alignment percentages if the alignment is > 60.
