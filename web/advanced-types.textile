@@ -1,6 +1,6 @@
 ---
 prev: type-basics.textile
-next: sbt.textile
+next: maven.textile
 title: Advanced types
 layout: post
 ---
