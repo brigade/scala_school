@@ -13,6 +13,7 @@ This lesson covers:
 * "basic inheritance":#extends
 * "traits":#trait
 * "types":#types
+* "Exercise":#exercise
 
 h2(#overview). About this class
 
@@ -464,3 +465,29 @@ Methods can also have type parameters introduced.
 <pre>
 def remove[K](key: K)
 </pre>
+
+h2(#exercise). Exercise
+
+Now for a quick exercise!
+
+Implement a <code>Calculator</code> that overrides <code>color</code> to always return "purple". Use this definition of calculator:
+
+<pre>
+class Calculator(brand: String) {
+  /**
+   * A constructor.
+   */
+  val color: String =
+    if (brand == "TI") {
+      "blue"
+    } else if (brand == "HP") {
+      "black"
+    } else {
+      "white"
+    }
+
+  // An instance method.
+  def add(m: Int, n: Int): Int = m + n
+}
+</pre>
+

@@ -27,6 +27,7 @@ This lesson covers:
 ** "flatMap":#flatMap
 ** "Generalized functional combinators":#generalized
 ** "Map?":#vsMap
+* "Exercise":#exercise
 
 h1. Basic Data Structures
 
@@ -442,3 +443,7 @@ res0: scala.collection.immutable.Map[String,Int] = Map((steve,100), (bob,101))
 Why does this work? Why can you pass in a partial pattern match?
 
 Stay tuned for next week!
+
+h1(#exercise). Exercise
+
+Implement a simple version of flatMap over a List[Int] using foldRight with the signature: <code>def flatMap(l: List[Int], f: Int => List[Int])</code>
