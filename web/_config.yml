@@ -63,12 +63,12 @@ lessons:
     desc_ru: Дополнительные типы, видимое ограничение, типы высшего порядка, рекурсивные типы, структурные типы
     desc_zh_cn: 高级类型，视界，更高级多态性类型，递归类型，结构类型
   -
-    title: Simple Build Tool
-    title_ko: SBT
-    title_ru: Simple Build Tool
+    title: Maven
+    title_ko: Maven
+    title_ru: Maven
     title_zh_cn: 简单构建工具
-    url: sbt.html
-    desc: All about SBT, the standard Scala build tool
+    url: maven.html
+    desc: All about Maven, our build tool
     desc_ko: 표준 스칼라 빌드 도구인 SBT에 대한 설명
     desc_ru: Все о SBT, Стандартное средство сборки приложений для Scala
     desc_zh_cn: 关于SBT——标准的Scala构建工具

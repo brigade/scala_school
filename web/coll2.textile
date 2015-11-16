@@ -1,5 +1,5 @@
 ---
-prev: sbt.textile
+prev: maven.textile
 next: specs.textile
 title: More collections
 layout: post
