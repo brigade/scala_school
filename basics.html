@@ -53,6 +53,7 @@
 	<li><a href="#extends">basic inheritance</a></li>
 	<li><a href="#trait">traits</a></li>
 	<li><a href="#types">types</a></li>
+	<li><a href="#exercise">Exercise</a></li>
 </ul>
 <h2 id="overview">About this class</h2>
 <p>The first few weeks will cover basic syntax and concepts, then we&#8217;ll start to open it up with more exercises.</p>
@@ -89,20 +90,29 @@
 <h3>Think Scala</h3>
 <p>Scala is not just a nicer Java.  You should learn it with a fresh mind- you will get more out of these classes.</p>
 <h3>Get Scala</h3>
-<p>Scala School&#8217;s examples work with <a href="http://www.scala-lang.org/download/2.9.3.html">Scala 2.9.x</a> . If you use Scala 2.10.x or newer, <em>most</em> examples work OK, but not all.</p>
+<p>Scala School&#8217;s examples should work with Scala 2.11. This is the same version that we use for services at Brigade. Please follow the <a href="https://brigade.atlassian.net/wiki/display/EN/Data+Team+Onboarding">onboarding instructions</a> to set up Java, Scala, Maven, and Thrift.</p>
 <h3>Start the Interpreter</h3>
-<p>Start the included <code>sbt console</code>.</p>
+<p>You can start a scala console that includes all project dependencies by entering <code>mvn scala:console</code> into the command line from the root project directory.</p>
 <pre>
-$ sbt console
-
-[...]
-
-Welcome to Scala version 2.8.0.final (Java HotSpot(TM) 64-Bit Server VM, Java 1.6.0_20).
+$ mvn scala:console
+[...build output...]
+Welcome to Scala version 2.11.4 (Java HotSpot(TM) 64-Bit Server VM, Java 1.7.0_71).
 Type in expressions to have them evaluated.
 Type :help for more information.
 
 scala&gt;
 </pre>
+<p>If you don&#8217;t have Maven set up, or don&#8217;t have a maven project to work with, you can start the Scala <span class="caps">REPL</span> with <code>scala</code>.</p>
+<pre>
+$ scala
+Welcome to Scala version 2.11.4 (Java HotSpot(TM) 64-Bit Server VM, Java 1.7.0_71).
+Type in expressions to have them evaluated.
+Type :help for more information.
+
+scala&gt;
+</pre>
+<p><em>Tip:</em> If you want to copy/paste examples from these lessons into the console, enter <code>:paste</code> into the console. This will enter &#8220;Paste Mode&#8221;, where you can paste your code, and do ctr-D to finish.</p>
+<p>Alternatively, if you have IntelliJ set up, you can create a Scala Worksheet under the src/main/scala directory of your project. This has an interactive mode which will run your code live.</p>
 <h2 id="expressions">Expressions</h2>
 <pre>
 scala&gt; 1 + 1
@@ -241,6 +251,14 @@ def capitalizeAll(args: String*) = {
 scala&gt; capitalizeAll("rarity", "applejack")
 res2: Seq[String] = ArrayBuffer(Rarity, Applejack)
 </pre>
+<p>If you want to pass an iterable to such a function, you can use the splat operator <code>:_*</code>:</p>
+<pre>
+scala&gt; val params = Seq("rarity", "applejack")
+params: Seq[String] = List(rarity, applejack)
+
+scala&gt; capitalizeAll(params: _*)
+res2: Seq[String] = List(Rarity, Applejack)
+</pre>
 <h2 id="class">Classes</h2>
 <pre>
 scala&gt; class Calculator {
@@ -266,13 +284,14 @@ class Calculator(brand: String) {
   /**
    * A constructor.
    */
-  val color: String = if (brand == "TI") {
-    "blue"
-  } else if (brand == "HP") {
-    "black"
-  } else {
-    "white"
-  }
+  val color: String =
+    if (brand == "TI") {
+      "blue"
+    } else if (brand == "HP") {
+      "black"
+    } else {
+      "white"
+    }
 
   // An instance method.
   def add(m: Int, n: Int): Int = m + n
@@ -286,7 +305,11 @@ calc: Calculator = Calculator@1e64cc4d
 
 scala&gt; calc.color
 res0: String = black
+
+scala&gt; calc.brand
+res1: String = "HP"
 </pre>
+<p>Note that by default all class parameters are</p>
 <h3>Expressions</h3>
 <p>Our Calculator example gave an example of how Scala is expression-oriented.  The value color was bound based on an if/else expression. Scala is highly expression-oriented: most things are expressions rather than statements.</p>
 <h3>Aside: Functions vs Methods</h3>
@@ -385,6 +408,27 @@ trait Cache[K, V] {
 <p>Methods can also have type parameters introduced.</p>
 <pre>
 def remove[K](key: K)
+</pre>
+<h2 id="exercise">Exercise</h2>
+<p>Now for a quick exercise!</p>
+<p>Implement a <code>Calculator</code> that overrides <code>color</code> to always return &#8220;purple&#8221;. Use this definition of calculator:</p>
+<pre>
+class Calculator(brand: String) {
+  /**
+   * A constructor.
+   */
+  val color: String =
+    if (brand == "TI") {
+      "blue"
+    } else if (brand == "HP") {
+      "black"
+    } else {
+      "white"
+    }
+
+  // An instance method.
+  def add(m: Int, n: Int): Int = m + n
+}
 </pre>
     </div> <!-- /container -->
 

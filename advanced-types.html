@@ -36,7 +36,7 @@
               <li><a href="type-basics.html">&laquo;Previous</a></li>
             
             
-              <li><a href="sbt.html">Next&raquo;</a></li>
+              <li><a href="maven.html">Next&raquo;</a></li>
             
           </ul>
 
@@ -47,18 +47,17 @@
     <div class="container" style="padding-top: 60px;">
       <p>This lesson covers:</p>
 <ul>
+	<li><a href="#implicit">Implicit Conversions</a></li>
 	<li><a href="#viewbounds">View bounds</a> (&#8220;type classes&#8221;)</li>
 	<li><a href="#otherbounds">Other Type Bounds</a></li>
-	<li><a href="#higher">Higher kinded types &amp; ad-hoc polymorphism</a></li>
 	<li><a href="#fbounded">F-bounded polymorphism / recursive types</a></li>
 	<li><a href="#structural">Structural types</a></li>
 	<li><a href="#abstractmem">Abstract types members</a></li>
-	<li><a href="#manifest">Type erasures &amp; manifests</a></li>
+	<li><a href="#typetags">Type erasures &amp; type tags</a></li>
 	<li><a href="#finagle">Case study: Finagle</a></li>
 </ul>
-<h2 id="viewbounds">View bounds (&#8220;type classes&#8221;)</h2>
-<p>Sometimes you don&#8217;t need to specify that one type is equal/sub/super another, just that you could fake it with conversions. A view bound specifies a type that can be &#8220;viewed as&#8221; another. This makes sense for an operation that needs to &#8220;read&#8221; an object but doesn&#8217;t modify the object.</p>
-<p><strong>Implicit</strong> functions allow automatic conversion. More precisely, they allow on-demand function application when this can help satisfy type inference. e.g.:</p>
+<h2 id="implicit">Implicit Conversions</h2>
+<p><strong>Implicit functions</strong> allow automatic conversion. More precisely, they allow on-demand function application when this can help satisfy type inference. e.g.:</p>
 <pre>
 scala&gt; implicit def strToInt(x: String) = x.toInt
 strToInt: (x: String)Int
@@ -72,6 +71,7 @@ y: Int = 123
 scala&gt; math.max("123", 111)
 res1: Int = 123
 </pre>
+<h2 id="viewbounds">View bounds (&#8220;type classes&#8221;)</h2>
 <p>View bounds, like type bounds demand such a function exists for the given type.  You specify a view bound with <code>&lt;%</code> e.g.,</p>
 <pre>
 scala&gt; class Container[A &lt;% Int] { def addIt(x: A) = 123 + x }
@@ -88,7 +88,11 @@ res12: Int = 246
 scala&gt; (new Container[Float]).addIt(123.2F)
 &lt;console&gt;:8: error: could not find implicit value for evidence parameter of type (Float) =&gt; Int
        (new Container[Float]).addIt(123.2)
-        ^
+               ^
+</pre>
+<p><code>&lt;%</code> is just syntactic sugar. You may see typeclasses defined using implicits in our code and elsewhere:</p>
+<pre>
+scala&gt; class Container[A](a: A)(implicit ev: A =&gt; Int) { def addIt(x: A) = 123 + x }
 </pre>
 <h2 id="otherbounds">Other type bounds</h2>
 <p>Methods can enforce more complex type bounds via implicit parameters. For example, <code>List</code> supports <code>sum</code> on numeric contents but not on others. Alas, Scala&#8217;s numeric types don&#8217;t all share a superclass, so we can&#8217;t just say <code>T &lt;: Number</code>. Instead, to make this work, Scala&#8217;s math library <a href="http://www.azavea.com/blogs/labs/2011/06/scalas-numeric-type-class-pt-1/">defines an implicit <code>Numeric[T]</code> for the appropriate types T</a>.  Then in <code>List</code>&#8217;s definition uses it:</p>
@@ -96,40 +100,6 @@ scala&gt; (new Container[Float]).addIt(123.2F)
 sum[B &gt;: A](implicit num: Numeric[B]): B
 </pre>
 <p>If you invoke <code>List(1,2).sum()</code>, you don&#8217;t need to pass a <em>num</em> parameter; it&#8217;s set implicitly. But if you invoke <code>List("whoop").sum()</code>, it complains that it couldn&#8217;t set <code>num</code>.</p>
-<p>Methods may ask for some kinds of specific &#8220;evidence&#8221; for a type without setting up strange objects as with <code>Numeric</code>. Instead, you can use one of these type-relation operators:</p>
-<table>
-	<tr>
-		<td>A =:= B</td>
-		<td>A must be equal to B</td>
-	</tr>
-	<tr>
-		<td>A &lt;:&lt; B</td>
-		<td>A must be a subtype of B</td>
-	</tr>
-	<tr>
-		<td>A &lt;%&lt; B</td>
-		<td>A must be viewable as B</td>
-	</tr>
-</table>
-<p>(If you get errors trying to use &lt;:&lt; or &lt;%&lt;, be aware that those went away in Scala 2.10. Scala School examples work with <a href="http://www.scala-lang.org/download/2.9.3.html">Scala 2.9.x</a> . You can use a newer Scala, but expect errors.)</p>
-<pre>
-scala&gt; class Container[A](value: A) { def addIt(implicit evidence: A =:= Int) = 123 + value }
-defined class Container
-
-scala&gt; (new Container(123)).addIt
-res11: Int = 246
-
-scala&gt; (new Container("123")).addIt
-&lt;console&gt;:10: error: could not find implicit value for parameter evidence: =:=[java.lang.String,Int]
-</pre>
-<p>Similarly, given our previous implicit, we can relax the constraint to viewability:</p>
-<pre>
-scala&gt; class Container[A](value: A) { def addIt(implicit evidence: A &lt;%&lt; Int) = 123 + value }
-defined class Container
-
-scala&gt; (new Container("123")).addIt
-res15: Int = 246
-</pre>
 <h3>Generic programming with views</h3>
 <p>In the Scala standard library, views are primarily used to implement generic functions over collections.  For example, the &#8220;min&#8221; function (on <strong>Seq[]</strong>), uses this technique:</p>
 <pre>
@@ -175,42 +145,6 @@ scala&gt; implicitly[Ordering[Int]]
 res37: Ordering[Int] = scala.math.Ordering$Int$@3a9291cf
 </pre>
 <p>Combined, these often result in less code, especially when threading through views.</p>
-<h2 id="higher">Higher-kinded types &amp; ad-hoc polymorphism</h2>
-<p>Scala can abstract over &#8220;higher kinded&#8221; types. For example, suppose that you needed to use several types of containers for several types of data. You might define a <code>Container</code> interface that might be implemented by means of several container types: an <code>Option</code>, a <code>List</code>, etc. You want to define an interface for using values in these containers without nailing down the values&#8217; type.</p>
-<p>This is analogous to function currying. For example, whereas &#8220;unary types&#8221; have constructors like <code>List[A]</code>, meaning we have to satisfy one &#8220;level&#8221; of type variables in order to produce a concrete types (just like an uncurried function needs to be supplied by only one argument list to be invoked), a higher-kinded type needs more.</p>
-<pre>
-scala&gt; trait Container[M[_]] { def put[A](x: A): M[A]; def get[A](m: M[A]): A }
-
-scala&gt; val container = new Container[List] { def put[A](x: A) = List(x); def get[A](m: List[A]) = m.head }
-container: java.lang.Object with Container[List] = $anon$1@7c8e3f75
-
-scala&gt; container.put("hey")
-res24: List[java.lang.String] = List(hey)
-
-scala&gt; container.put(123)
-res25: List[Int] = List(123)
-</pre>
-<p>Note that <strong>Container</strong> is polymorphic in a parameterized type (&#8220;container type&#8221;).</p>
-<p>If we combine using containers with implicits, we get &#8220;ad-hoc&#8221; polymorphism: the ability to write generic functions over containers.</p>
-<pre>
-scala&gt; trait Container[M[_]] { def put[A](x: A): M[A]; def get[A](m: M[A]): A }
-
-scala&gt; implicit val listContainer = new Container[List] { def put[A](x: A) = List(x); def get[A](m: List[A]) = m.head }
-
-scala&gt; implicit val optionContainer = new Container[Some] { def put[A](x: A) = Some(x); def get[A](m: Some[A]) = m.get }
-
-scala&gt; def tupleize[M[_]: Container, A, B](fst: M[A], snd: M[B]) = {
-     | val c = implicitly[Container[M]]
-     | c.put(c.get(fst), c.get(snd))
-     | }
-tupleize: [M[_],A,B](fst: M[A],snd: M[B])(implicit evidence$1: Container[M])M[(A, B)]
-
-scala&gt; tupleize(Some(1), Some(2))
-res33: Some[(Int, Int)] = Some((1,2))
-
-scala&gt; tupleize(List(1), List(2))
-res34: List[(Int, Int)] = List((1,2))
-</pre>
 <h2 id="fbounded">F-bounded polymorphism</h2>
 <p>Often it&#8217;s necessary to access a concrete subclass in a (generic) trait. For example, imagine you had some trait that is generic, but can be compared to a particular subclass of that trait.</p>
 <pre>
@@ -287,7 +221,8 @@ foo: (x: AnyRef{def get: Int})Int
 scala&gt; foo(new { def get = 10 })
 res0: Int = 133
 </pre>
-<p>This can be quite nice in many situations, but the implementation uses reflection, so be performance-aware!</p>
+<p>We and most of the scala community avoid structural typing because of<br />
+it has serious performance implications.</p>
 <h2 id="abstractmem">Abstract type members</h2>
 <p>In a trait, you can leave type members abstract.</p>
 <pre>
@@ -301,18 +236,11 @@ scala&gt; (new Foo { type A = String; val x = "hey" }).getX
 res4: java.lang.String = hey
 </pre>
 <p>This is often a useful trick when doing dependency injection, etc.</p>
-<p>You can refer to an abstract type variable using the hash-operator:</p>
+<h2 id="typetags">Type erasures &amp; type tags</h2>
+<p>As we know, type information is lost at compile time due to <em>erasure</em>. Scala features <strong>TypeTags</strong>, allowing us to selectively recover type information. TypeTags are provided as an implicit value, generated by the compiler as needed. Side note: you&#8217;ll probably see <strong>ClassTags</strong> more often, these are actually a special case of a TypeTag with less information.</p>
 <pre>
-scala&gt; trait Foo[M[_]] { type t[A] = M[A] }
-defined trait Foo
-
-scala&gt; val x: Foo[List]#t[Int] = List(1)
-x: List[Int] = List(1)
-</pre>
-<h2 id="manifest">Type erasures &amp; manifests</h2>
-<p>As we know, type information is lost at compile time due to <em>erasure</em>. Scala features <strong>Manifests</strong>, allowing us to selectively recover type information. Manifests are provided as an implicit value, generated by the compiler as needed.</p>
-<pre>
-scala&gt; class MakeFoo[A](implicit manifest: Manifest[A]) { def make: A = manifest.erasure.newInstance.asInstanceOf[A] }
+scala&gt; import scala.reflect.ClassTag
+scala&gt; class MakeFoo[A](implicit ct: ClassTag[A]) { def make: A = ct.runtimeClass.newInstance.asInstanceOf[A] }
 
 scala&gt; (new MakeFoo[String]).make
 res10: String = ""

@@ -52,13 +52,14 @@
 		<li>compose</li>
 		<li>andThen</li>
 	</ul></li>
-	<li><a href="#curryvspartial">Currying vs Partial Application</a></li>
+	<li><a href="#casestatements">Case Statements</a></li>
 	<li><a href="#PartialFunction">PartialFunctions</a>
 	<ul>
 		<li>range and domain</li>
 		<li>composition with orElse</li>
 	</ul></li>
 	<li><a href="#case">What is a case statement?</a></li>
+	<li><a href="#exercise">Exercise</a></li>
 </ul>
 <h2 id="composition">Function Composition</h2>
 <p>Let&#8217;s make two aptly-named functions:</p>
@@ -87,11 +88,10 @@ fAndThenG: (String) =&gt; java.lang.String = &lt;function&gt;
 scala&gt; fAndThenG("yay")
 res1: java.lang.String = g(f(yay))
 </pre>
-<h2 id="curryvspartial">Currying vs Partial Application</h2>
-<h3>case statements</h3>
-<h4>So just what are case statements?</h4>
+<h2 id="casestatements">Case Statements</h2>
+<h3>So just what are case statements?</h3>
 <p>It&#8217;s a subclass of function called a PartialFunction.</p>
-<h4>What is a collection of multiple case statements?</h4>
+<h3>What is a collection of multiple case statements?</h3>
 <p>They are multiple PartialFunctions composed together.</p>
 <h2 id="PartialFunction">Understanding PartialFunction</h2>
 <p>A function works for every argument of the defined type. In other words, a function defined as (Int) =&gt; String takes any Int and returns a String.</p>
@@ -158,6 +158,8 @@ res0: List[PhoneExt] = List(PhoneExt(steve,100))
 <p>Why does this work?</p>
 <p>filter takes a function. In this case a predicate function of (PhoneExt) =&gt; Boolean.</p>
 <p>A PartialFunction is a subtype of Function so filter can also take a PartialFunction!</p>
+<h2 id="exercise">Exercise</h2>
+<p>Define a case class <code>AlignmentStats</code> which contains a positions aligned count and a positions misaligned count. Use the <code>collect</code> combinator to transform a <code>Seq[AlignmentStats]</code> into a Seq of alignment percentages if the alignment is &gt; 60.</p>
     </div> <!-- /container -->
 
     <div id="footer">

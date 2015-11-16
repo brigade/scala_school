@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Scala School - Maven</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link rel="stylesheet" href="bootstrap-1.1.0.min.css">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-39101739-7', 'twitter.github.io');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+
+  <body>
+  
+    <div class="topbar">
+      <div class="fill">
+        <div class="container fixed">
+          <h3><a href="index.html">Maven</a></h3>
+          <ul class="nav secondary-nav">
+            
+              <li><a href="advanced-types.html">&laquo;Previous</a></li>
+            
+            
+              <li><a href="coll2.html">Next&raquo;</a></li>
+            
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container" style="padding-top: 60px;">
+      <p>This lesson covers Maven! Specific topics include:</p>
+<ul>
+	<li>creating an Maven scala project</li>
+	<li>basic commands</li>
+</ul>
+<h2>About Maven</h2>
+<p>Maven is one of the most popular Java build tools. Unlike <span class="caps">SBT</span>, Ant, and<br />
+others, it stresses a declarative approach and convention over configuration.</p>
+<h2>Why Maven?</h2>
+<ul>
+	<li>Great dependency management</li>
+	<li>Out-of-the box integrations (Jenkins, IDEs, Nexus, etc&#8230;)</li>
+	<li>Lots of plugins</li>
+	<li>Relatively simple</li>
+</ul>
+<h2>Why not <span class="caps">SBT</span>?</h2>
+<p><span class="caps">SBT</span> (simple/scala build tool) is more popular than Maven in the Scala community,<br />
+and has been improving rapidly in the past few years. We may switch to it eventually,<br />
+though Maven has been working perfectly well for us.</p>
+<p>Benefits of Maven over <span class="caps">SBT</span>:</p>
+<ul>
+	<li>Easier to learn</li>
+	<li>Declarative</li>
+	<li>Very mature ecosystem</li>
+	<li>Does fewer things, but does them well</li>
+</ul>
+<p>Benefits of <span class="caps">SBT</span> over Maven</p>
+<ul>
+	<li>No <span class="caps">XML</span></li>
+	<li>Super easy to extend with custom plugins (some would say too easy)</li>
+	<li>Much less boilerplate</li>
+</ul>
+<h2>Project Layout</h2>
+<ul>
+	<li><code>pom.xml</code> &#8211; your Maven project definition (pom stands for &#8220;project object model&#8221;)</li>
+	<li><code>src/main</code> &#8211; your app code goes here, in a subdirectory indicating the<br />
+code&#8217;s language (e.g. <code>src/main/scala</code>, <code>src/main/java</code>)</li>
+	<li><code>src/main/resources</code> &#8211; static files you want added to your jar<br />
+  (e.g. logging config)</li>
+	<li><code>src/test</code> &#8211; like <code>src/main</code>, but for tests</li>
+	<li><code>target</code> &#8211; the destination for generated stuff (e.g. generated thrift<br />
+  code, class files, jars)</li>
+</ul>
+<h2>Getting Started</h2>
+<ul>
+	<li>Make sure maven is installed (<code>brew install maven</code>)</li>
+	<li>I created a basic scala maven project <a href="https://gist.github.com/matteobanerjee/6aafa5d75938c1cfc499">here</a> <br />
+(this is verbose because scala support is a plugin)</li>
+	<li>Your <span class="caps">IDE</span> can also create a Maven project for you</li>
+</ul>
+<pre>
+[local ~/]$ mkdir -p projects/sample
+[local ~/]$ cd projects/sample
+[local ~/projects/sample]$ wget https://gist.githubusercontent.com/matteobanerjee/6aafa5d75938c1cfc499/raw/15b127fd120f9680495b5509f74c5204e1b7444a/pom.xml
+[local ~/projects/sample]$ mvn compile
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building sample 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ sample ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /Users/matteobanerjee/projects/sample/src/main/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ sample ---
+[INFO] No sources to compile
+[INFO]
+[INFO] --- scala-maven-plugin:3.2.0:compile (default) @ sample ---
+[INFO] No sources to compile
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 3.513 s
+[INFO] Finished at: 2015-11-13T17:55:14-08:00
+[INFO] Final Memory: 11M/245M
+</pre>
+<h2>Adding Some Code</h2>
+<p>We&#8217;ll be creating a simple <span class="caps">JSON</span> parser for simple tweets.  Add the following code to<br />
+<code>src/main/scala/sample/SimpleParser.scala</code></p>
+<pre>
+package sample
+
+case class SimpleParsed(id: Long, text: String)
+
+class SimpleParser {
+
+  val tweetRegex = "\"id\":(.*),\"text\":\"(.*)\"".r
+
+  def parse(str: String) = {
+    tweetRegex.findFirstMatchIn(str) match {
+      case Some(m) =&gt; {
+        val id = str.substring(m.start(1), m.end(1)).toInt
+        val text = str.substring(m.start(2), m.end(2))
+        Some(SimpleParsed(id, text))
+      }
+      case _ =&gt; None
+    }
+  }
+}
+</pre>
+<p>This is ugly and buggy, but should compile.</p>
+<h2>Compiling and Testing in the Console</h2>
+<p>Compile your code:<br />
+<pre>[local ~/projects/sample]$ mvn compile</pre></p>
+<p>Maven allows you to start a Scala <span class="caps">REPL</span> with all your project<br />
+dependencies loaded. It compiles your project source before launching<br />
+the console, providing us a quick way to bench test our parser.</p>
+<pre>
+[local ~/projects/sample]$ mvn scala:console
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building sample 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- scala-maven-plugin:3.2.0:console (default-cli) @ sample ---
+[WARNING] scala-maven-plugin cannot fork scala console!!  Running in process
+Welcome to Scala version 2.11.6 (Java HotSpot(TM) 64-Bit Server VM, Java 1.7.0_67).
+Type in expressions to have them evaluated.
+Type :help for more information.
+
+scala&gt;
+</pre>
+<p>Our code has compiled, and we&#8217;re provide the typical Scala prompt.  We&#8217;ll create a new parser, an exemplar tweet, and ensure it &#8220;works&#8221;</p>
+<pre>
+scala&gt; import sample._
+import sample._
+
+scala&gt; val tweet = """{"id":1,"text":"foo"}"""
+tweet: String = {"id":1,"text":"foo"}
+
+scala&gt; val parser = new SimpleParser
+parser: sample.SimpleParser = sample.SimpleParser@45d41c7f
+
+scala&gt; parser.parse(tweet)
+res0: Option[sample.SimpleParsed] = Some(SimpleParsed(1,foo))
+
+scala&gt;
+</pre>
+<h2>Adding Tests</h2>
+<p>The Maven build you pulled down already has our testing library,<br />
+ScalaTest, declared as a dependency. So let&#8217;s add a spec in<br />
+src/test/scala/sample/SimpleParserSpec.scala</p>
+<pre>
+package sample
+
+import org.scalatest._
+
+class SimpleParserSpec extends WordSpec with Matchers {
+
+  "SimpleParser" should {
+    val parser = new SimpleParser()
+
+    "work with basic tweet" in {
+      val tweet = """{"id":1,"text":"foo"}"""
+      parser.parse(tweet) match {
+        case Some(parsed) =&gt;
+          parsed.text should equal("foo")
+          parsed.id should equal(1)
+        case _ =&gt; fail("didn't parse tweet")
+      }
+    }
+  }
+}
+</pre>
+<p>Run the test at the command line. The flag <code>-q</code> suppresses <span class="caps">INFO</span> output:</p>
+<pre>
+[local ~/projects/sample]$ mvn test -q
+Discovery starting.
+Discovery completed in 351 milliseconds.
+Run starting. Expected test count is: 1
+SimpleParserSpec:
+SimpleParser
+- should work with basic tweet
+Run completed in 543 milliseconds.
+Total number of tests run: 1
+Suites: completed 2, aborted 0
+Tests: succeeded 1, failed 0, canceled 0, ignored 0, pending 0
+All tests passed.
+</pre>
+<p>Our test works!  Now we can add more.</p>
+<p>First, let&#8217;s start a continuous test loop:</p>
+<pre>
+[local ~/projects/sample]$ mvn -Dcctest.goals=scalatest:test scala:cctest
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building sample 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- scala-maven-plugin:3.2.0:cctest (default-cli) @ sample ---
+[INFO] wait for files to compile...
+[INFO] /Users/matteobanerjee/projects/sample/src/test/scala:-1: info: compiling
+[INFO] Using zinc server for incremental compilation
+[info] Compile success at Nov 13, 2015 6:29:39 PM [0.057s]
+[INFO] Now running all the unit tests. Use -Dtest=FooTest to run a single test by name
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building sample 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- maven-surefire-plugin:2.7:test (default-cli) @ sample ---
+[INFO] Tests are skipped.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1.136 s
+[INFO] Finished at: 2015-11-13T18:29:43-08:00
+[INFO] Final Memory: 8M/245M
+[INFO] ------------------------------------------------------------------------
+[INFO] wait for files to compile...
+</pre>
+<p>Now let&#8217;s add the following test cases</p>
+<pre>
+    "reject a non-JSON tweet" in {
+      val tweet = """"id":1,"text":"foo""""
+      parser.parse(tweet) should equal(None)
+    }
+
+    "ignore nested content" in {
+      val tweet = """{"id":1,"text":"foo","nested":{"id":2}}"""
+      parser.parse(tweet) match {
+        case Some(parsed) =&gt; {
+          parsed.text should equal("foo")
+          parsed.id should equal(1)
+        }
+        case _ =&gt; fail("didn't parse tweet")
+      }
+    }
+
+    "fail on partial content" in {
+      val tweet = """{"id":1}"""
+      parser.parse(tweet) should equal(None)
+    }
+</pre>
+<p>After we save our file, Maven detects our changes, runs tests, and informs us our parser is lame</p>
+<pre>
+Discovery starting.
+Discovery completed in 424 milliseconds.
+Run starting. Expected test count is: 4
+SimpleParserSpec:
+SimpleParser
+- should work with basic tweet
+- should reject a non-JSON tweet *** FAILED ***
+  Some(SimpleParsed(1,foo)) did not equal None (SimpleParserSpec.scala:22)
+  - should ignore nested content *** FAILED ***
+    "foo[","nested":{"id]" did not equal "foo[]" (SimpleParserSpec.scala:29)
+    - should fail on partial content
+Run completed in 716 milliseconds.
+Total number of tests run: 4
+Suites: completed 2, aborted 0
+Tests: succeeded 2, failed 2, canceled 0, ignored 0, pending 0
+*** 2 TESTS FAILED ***
+</pre>
+<h2>Adding Dependencies</h2>
+<p>Our simple parser works for this very small set of inputs, but we want to add tests and break it.  The first step is adding the specs test library and a real <span class="caps">JSON</span> parser to our project.</p>
+<p>Add the following dependency to your <code>pom.xml</code> file under the <code>&lt;dependencies&gt;</code> section.</p>
+<pre>
+&lt;dependency&gt;
+  &lt;groupId&gt;org.codehaus.jackson&lt;/groupId&gt;
+  &lt;artifactId&gt;jackson-core-asl&lt;/artifactId&gt;
+  &lt;version&gt;1.6.1&lt;/version&gt;
+&lt;/dependency&gt;
+</pre>
+<p>So let&#8217;s rework our <span class="caps">JSON</span> parser to be real</p>
+<pre>
+package sample
+
+import org.codehaus.jackson._
+import org.codehaus.jackson.JsonToken._
+
+case class SimpleParsed(id: Long, text: String)
+
+class SimpleParser {
+
+  val parserFactory = new JsonFactory()
+
+  def parse(str: String) = {
+    val parser = parserFactory.createJsonParser(str)
+    if (parser.nextToken() == START_OBJECT) {
+      var token = parser.nextToken()
+      var textOpt:Option[String] = None
+      var idOpt:Option[Long] = None
+      while(token != null) {
+        if (token == FIELD_NAME) {
+          parser.getCurrentName() match {
+            case "text" =&gt; {
+              parser.nextToken()
+              textOpt = Some(parser.getText())
+            }
+            case "id" =&gt; {
+              parser.nextToken()
+              idOpt = Some(parser.getLongValue())
+            }
+            case _ =&gt; // noop
+          }
+        }
+        token = parser.nextToken()
+      }
+      if (textOpt.isDefined &amp;&amp; idOpt.isDefined) {
+        Some(SimpleParsed(idOpt.get, textOpt.get))
+      } else {
+        None
+      }
+    } else {
+      None
+    }
+  }
+}
+</pre>
+<p>This is a simple Jackson parser.  When we save, Maven recompiles our code and reruns our tests.  Getting better!</p>
+<pre>
+Discovery starting.
+Discovery completed in 499 milliseconds.
+Run starting. Expected test count is: 4
+SimpleParserSpec:
+SimpleParser
+- should work with basic tweet
+- should reject a non-JSON tweet
+- should ignore nested content *** FAILED ***
+  2 did not equal 1 (SimpleParserSpec.scala:30)
+- should fail on partial content
+Run completed in 790 milliseconds.
+Total number of tests run: 4
+Suites: completed 2, aborted 0
+Tests: succeeded 3, failed 1, canceled 0, ignored 0, pending 0
+*** 1 TEST FAILED ***
+</pre>
+<p>Uh oh.  We need to check for nested objects.  Let&#8217;s add some ugly<br />
+guards to our token reading loop.</p>
+<pre>
+  def parse(str: String) = {
+    val parser = parserFactory.createJsonParser(str)
+    var nested = 0
+    if (parser.nextToken() == START_OBJECT) {
+      var token = parser.nextToken()
+      var textOpt:Option[String] = None
+      var idOpt:Option[Long] = None
+      while(token != null) {
+        if (token == FIELD_NAME &amp;&amp; nested == 0) {
+          parser.getCurrentName() match {
+            case "text" =&gt; {
+              parser.nextToken()
+              textOpt = Some(parser.getText())
+            }
+            case "id" =&gt; {
+              parser.nextToken()
+              idOpt = Some(parser.getLongValue())
+            }
+            case _ =&gt; // noop
+          }
+        } else if (token == START_OBJECT) {
+          nested += 1
+        } else if (token == END_OBJECT) {
+          nested -= 1
+        }
+        token = parser.nextToken()
+      }
+      if (textOpt.isDefined &amp;&amp; idOpt.isDefined) {
+        Some(SimpleParsed(idOpt.get, textOpt.get))
+      } else {
+        None
+      }
+    } else {
+      None
+    }
+  }
+</pre>
+<p>And&#8230; it works!</p>
+<h2>Packaging and Publishing</h2>
+<p>At this point we can run the package command to generate a jar (java archive) file:<br />
+<pre>mvn package</pre></p>
+<p>This only packages the code we wrote in our project. However, when we ship a code we usually want<br />
+to package our dependencies along with it too.</p>
+<p>The first step is include the Maven Shade plugin.  Plugins are a way to introduce dependencies to your build, rather than your project.<br />
+Add the following under the <code>plugins</code> section of your <code>pom.xml</code> file:</p>
+<pre>
+    &lt;plugin&gt;
+        &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;
+        &lt;version&gt;2.3&lt;/version&gt;
+        &lt;executions&gt;
+            &lt;execution&gt;
+                &lt;phase&gt;package&lt;/phase&gt;
+                &lt;goals&gt;
+                    &lt;goal&gt;shade&lt;/goal&gt;
+                &lt;/goals&gt;
+            &lt;/execution&gt;
+        &lt;/executions&gt;
+    &lt;/plugin&gt;
+</pre>
+<p>Now run <code>mvn package</code>. Our <span class="caps">JAR</span> can be found at <code>target/sample-1.0-SNAPSHOT.jar</code>.</p>
+<h2>Quick Reference</h2>
+<h3>Common Commands</h3>
+<ul>
+	<li>clean &#8211; clear the <code>target/</code> directory</li>
+	<li>compile &#8211; compiles source</li>
+	<li>test &#8211; runs tests</li>
+	<li>package &#8211; creates a publishable jar file</li>
+	<li>install &#8211; install the package into the local repository, for use as a dependency in other projects locally</li>
+</ul>
+<p>There are many more commands, each plugin typically defines its own commands too.<br />
+Multiple commands can be run at once: <code>mvn clean package</code></p>
+    </div> <!-- /container -->
+
+    <div id="footer">
+      <div class="inner">
+        <div class="container">
+          <p>
+
+          Built at <a href="http://twitter.com/twitter"
+          target="_blank">@twitter</a> by
+          <a href="http://twitter.com/stevej" target="_blank">@stevej</a>,
+          <a href="http://twitter.com/marius" target="_blank">@marius</a>, and
+          <a href="http://twitter.com/lahosken" target="_blank">@lahosken</a>
+          with much help from
+          <a href="http://twitter.com/evanm" target="_blank">@evanm</a>,
+          <a href="http://twitter.com/sprsquish"
+          target="_blank">@sprsquish</a>,
+          <a href="http://twitter.com/kevino" target="_blank">@kevino</a>,
+          <a href="http://twitter.com/zuercher" target="_blank">@zuercher</a>,
+          <a href="http://twitter.com/timtrueman"
+          target="_blank">@timtrueman</a>,
+          <a href="http://twitter.com/wickman" target="_blank">@wickman</a>,
+          and <a href="http://twitter.com/mccv" target="_blank">@mccv</a>;
+          Russian translation by
+          <a href="https://github.com/appigram">appigram</a>;
+          Chinese simple translation by
+          <a href="https://github.com/jasonqu">jasonqu</a>;
+          Korean translation by
+          <a href="https://github.com/enshahar">enshahar</a>;<br />
+          <br />
+
+          Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License v2.0</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>

@@ -54,6 +54,7 @@
 	<li><a href="#match">pattern matching</a></li>
 	<li><a href="#caseclass">case classes</a></li>
 	<li><a href="#exception">try-catch-finally</a></li>
+	<li><a href="#exercise">Exercise</a></li>
 </ul>
 <h2 id="apply">apply methods</h2>
 <p>apply methods give you a nice syntactic sugar for when a class or object has one main use.</p>
@@ -149,22 +150,22 @@ class AddOne extends (Int =&gt; Int) {
 package com.twitter.example
 </pre>
 <p>at the top of a file will declare everything in the file to be in that package.</p>
-<p>Values and functions cannot be outside of a class or object.  Objects are a useful tool for organizing static functions.</p>
+<p>Values and functions cannot be outside of a class or object.  Objects are a useful tool for organizing static functions and fields.</p>
 <pre>
 package com.twitter.example
 
-object colorHolder {
-  val BLUE = "Blue"
-  val RED = "Red"
+object ColorHolder {
+  val Blue = "Blue"
+  val Red = "Red"
 }
 </pre>
-<p>Now you can access the members directly</p>
+<p>Now you can access the members directly. Note that static values are formatted as capitalized camel-case.</p>
 <pre>
-println("the color is: " + com.twitter.example.colorHolder.BLUE)
+println("the color is: " + com.twitter.example.ColorHolder.Blue)
 </pre>
 <p>Notice what the scala repl says when you define this object:</p>
 <pre>
-scala&gt; object colorHolder {
+scala&gt; object ColorHolder {
      |   val Blue = "Blue"
      |   val Red = "Red"
      | }
@@ -295,6 +296,11 @@ val result: Int = try {
 </pre>
 <p>This is not an example of excellent programming style, just an example of try-catch-finally resulting in expressions like most everything else in Scala.</p>
 <p>Finally will be called after an exception has been handled and is not part of the expression.</p>
+<h2 id="exercise">Exercise</h2>
+<p>Write a function that uses pattern matching to print the name of the name of a <code>Calculator</code> if it&#8217;s one of &#8220;hp&#8221;, &#8220;ti&#8221;, or &#8220;casio&#8221;. If it&#8217;s none of those, print an error message. Use the following definition of <code>Calculator</code>:</p>
+<pre>
+case class Calculator(brand: String, model: String)
+</pre>
     </div> <!-- /container -->
 
     <div id="footer">

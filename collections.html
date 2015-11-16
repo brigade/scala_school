@@ -71,6 +71,7 @@
 		<li><a href="#generalized">Generalized functional combinators</a></li>
 		<li><a href="#vsMap">Map?</a></li>
 	</ul></li>
+	<li><a href="#exercise">Exercise</a></li>
 </ul>
 <h1>Basic Data Structures</h1>
 <p>Scala provides some nice collections.</p>
@@ -83,16 +84,31 @@ numbers: Array[Int] = Array(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
 
 scala&gt; numbers(3) = 10
 </pre>
+<h2 id="Seqs">Seqs</h2>
+<p>Seqs preserve order, can contain duplicates, and are immutable (by default). Note that there are actually three different kinds of Seqs: scala.collection.Seq (trait), scala.collection.mutable.Seq, scala.collection.immutable.Seq. The latter is used by default. Note that List and other collections implement the Seq trait, so it&#8217;s good practice to default to using it for immutable, ordered lists of things.</p>
+<pre>
+scala&gt; val numbers = Seq(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
+numbers: Seq[Int] = Seq(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
+
+scala&gt; numbers(3) = 10
+&lt;console&gt;:9: error: value update is not a member of Seq[Int]
+              numbers(3) = 10
+</pre>
 <h2 id="Lists">Lists</h2>
-<p>Lists preserve order, can contain duplicates, and are immutable.</p>
+<p>Lists preserve order, can contain duplicates, and are immutable. They are backed by a linked-list implementation, which is popular in functional programming because it is a <a href="https://en.wikipedia.org/wiki/Persistent_data_structure">persistent data structure</a>. It also enables some cool pattern matching:</p>
 <pre>
 scala&gt; val numbers = List(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
 numbers: List[Int] = List(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
 
-scala&gt; numbers(3) = 10
-&lt;console&gt;:9: error: value update is not a member of List[Int]
-              numbers(3) = 10
+numbers match {
+  case head :: tail =&gt;
+    // prints "head: 1, tail: List(2, 3, 4, 5, 1, 2, 3, 4, 5)"
+    println(s"head: $head, tail: $tail")
+  case Nil =&gt;
+    println("empty list!")
+}
 </pre>
+<p>Note that <code>Nil</code> is equivalent to an empty List.</p>
 <h2 id="Sets">Sets</h2>
 <p>Sets do not preserve order and have no duplicates</p>
 <pre>
@@ -189,14 +205,14 @@ val result = res1 match {
 </pre>
 <p><strong>See Also</strong> Effective Scala has opinions about <a href="http://twitter.github.com/effectivescala/#Functional programming-Options">Options</a>.</p>
 <h1 id="combinators">Functional Combinators</h1>
-<p><code>List(1, 2, 3) map squared</code> applies the function <code>squared</code> to the elements of the list, returning a new list, perhaps <code>List(1, 4, 9)</code>. We call operations like <code>map</code> <em>combinators</em>. (If you&#8217;d like a better definition, you might like <a href="http://stackoverflow.com/questions/7533837/explanation-of-combinators-for-the-working-man">Explanation of combinators</a> on Stackoverflow.) Their most common use is on the standard data structures.</p>
+<p><code>List(1, 2, 3).map { squared }</code> applies the function <code>squared</code> to the elements of the list, returning a new list, perhaps <code>List(1, 4, 9)</code>. We call operations like <code>map</code> <em>combinators</em>. (If you&#8217;d like a better definition, you might like <a href="http://stackoverflow.com/questions/7533837/explanation-of-combinators-for-the-working-man">Explanation of combinators</a> on Stackoverflow.) Their most common use is on the standard data structures.</p>
 <h2 id="map">map</h2>
 <p>Evaluates a function over each element in the list, returning a list with the same number of elements.</p>
 <pre>
 scala&gt; val numbers = List(1, 2, 3, 4)
 numbers: List[Int] = List(1, 2, 3, 4)
 
-scala&gt; numbers.map((i: Int) =&gt; i * 2)
+scala&gt; numbers.map { (i: Int) =&gt; i * 2 }
 res0: List[Int] = List(2, 4, 6, 8)
 </pre>
 <p>or pass in a function (the Scala compiler automatically converts our method to a function)</p>
@@ -205,24 +221,24 @@ res0: List[Int] = List(2, 4, 6, 8)
 scala&gt; def timesTwo(i: Int): Int = i * 2
 timesTwo: (i: Int)Int
 
-scala&gt; numbers.map(timesTwo)
+scala&gt; numbers.map { timesTwo }
 res0: List[Int] = List(2, 4, 6, 8)
 </pre>
 <h2 id="foreach">foreach</h2>
 <p>foreach is like map but returns nothing. foreach is intended for side-effects only.</p>
 <pre>
-scala&gt; numbers.foreach((i: Int) =&gt; i * 2)
+scala&gt; numbers.foreach { (i: Int) =&gt; i * 2 }
 </pre>
 <p>returns nothing.</p>
 <p>You can try to store the return in a value but it&#8217;ll be of type Unit (i.e. void)</p>
 <pre>
-scala&gt; val doubled = numbers.foreach((i: Int) =&gt; i * 2)
+scala&gt; val doubled = numbers.foreach { (i: Int) =&gt; i * 2 }
 doubled: Unit = ()
 </pre>
 <h2 id="filter">filter</h2>
-<p>removes any elements where the function you pass in evaluates to false.  Functions that return a Boolean are often called predicate functions.</p>
+<p>Constructs a new collection with elements where the function passed in evalutes to true.  Functions that return a Boolean are often called predicate functions.</p>
 <pre>
-scala&gt; numbers.filter((i: Int) =&gt; i % 2 == 0)
+scala&gt; numbers.filter { (i: Int) =&gt; i % 2 == 0 }
 res0: List[Int] = List(2, 4)
 </pre>
 
@@ -230,7 +246,7 @@ res0: List[Int] = List(2, 4)
 scala&gt; def isEven(i: Int): Boolean = i % 2 == 0
 isEven: (i: Int)Boolean
 
-scala&gt; numbers.filter(isEven)
+scala&gt; numbers.filter { isEven }
 res2: List[Int] = List(2, 4)
 </pre>
 <h2 id="zip">zip</h2>
@@ -243,13 +259,13 @@ res0: List[(Int, String)] = List((1,a), (2,b), (3,c))
 <p><code>partition</code> splits a list based on where it falls with respect to a predicate function.</p>
 <pre>
 scala&gt; val numbers = List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-scala&gt; numbers.partition(_ % 2 == 0)
+scala&gt; numbers.partition { _ % 2 == 0 }
 res0: (List[Int], List[Int]) = (List(2, 4, 6, 8, 10),List(1, 3, 5, 7, 9))
 </pre>
 <h2 id="find">find</h2>
 <p>find returns the first element of a collection that matches a predicate function.</p>
 <pre>
-scala&gt; numbers.find((i: Int) =&gt; i &gt; 5)
+scala&gt; numbers.find { (i: Int) =&gt; i &gt; 5 }
 res0: Option[Int] = Some(6)
 </pre>
 <h2 id="drop">drop &amp; dropWhile</h2>
@@ -260,12 +276,12 @@ res0: List[Int] = List(6, 7, 8, 9, 10)
 </pre>
 <p><code>dropWhile</code> removes the first elements that match a predicate function. For example, if we <code>dropWhile</code> odd numbers from our list of numbers, <code>1</code> gets dropped (but not <code>3</code> which is &#8220;shielded&#8221; by <code>2</code>).</p>
 <pre>
-scala&gt; numbers.dropWhile(_ % 2 != 0)
+scala&gt; numbers.dropWhile { _ % 2 != 0 }
 res0: List[Int] = List(2, 3, 4, 5, 6, 7, 8, 9, 10)
 </pre>
 <h2 id="fold">foldLeft</h2>
 <pre>
-scala&gt; numbers.foldLeft(0)((m: Int, n: Int) =&gt; m + n)
+scala&gt; numbers.foldLeft(0) { (m: Int, n: Int) =&gt; m + n }
 res0: Int = 55
 </pre>
 <p>0 is the starting value (Remember that numbers is a List[Int]), and m<br />
@@ -313,15 +329,15 @@ res0: List[Int] = List(1, 2, 3, 4)
 scala&gt; val nestedNumbers = List(List(1, 2), List(3, 4))
 nestedNumbers: List[List[Int]] = List(List(1, 2), List(3, 4))
 
-scala&gt; nestedNumbers.flatMap(x =&gt; x.map(_ * 2))
+scala&gt; nestedNumbers.flatMap { x =&gt; x.map(_ * 2) }
 res0: List[Int] = List(2, 4, 6, 8)
 </pre>
 <p>Think of it as short-hand for mapping and then flattening:</p>
 <pre>
-scala&gt; nestedNumbers.map((x: List[Int]) =&gt; x.map(_ * 2)).flatten
+scala&gt; nestedNumbers.map { (x: List[Int]) =&gt; x.map(_ * 2) }.flatten
 res1: List[Int] = List(2, 4, 6, 8)
 </pre>
-<p>that example calling map and then flatten is an example of the &#8220;combinator&#8221;-like nature of these functions.</p>
+<p>That example calling map and then flatten is an example of the &#8220;combinator&#8221;-like nature of these functions.</p>
 <p><strong>See Also</strong> Effective Scala has opinions about <a href="http://twitter.github.com/effectivescala/#Functional programming-`flatMap`">flatMap</a>.</p>
 <h2 id="generalized">Generalized functional combinators</h2>
 <p>Now we&#8217;ve learned a grab-bag of functions for working with collections.</p>
@@ -346,17 +362,19 @@ extensions: scala.collection.immutable.Map[String,Int] = Map((steve,100), (bob,1
 </pre>
 <p>Now filter out every entry whose phone extension is lower than 200.</p>
 <pre>
-scala&gt; extensions.filter((namePhone: (String, Int)) =&gt; namePhone._2 &lt; 200)
+scala&gt; extensions.filter { (namePhone: (String, Int)) =&gt; namePhone._2 &lt; 200 }
 res0: scala.collection.immutable.Map[String,Int] = Map((steve,100), (bob,101))
 </pre>
 <p>Because it gives you a tuple, you have to pull out the keys and values with their positional accessors. Yuck!</p>
 <p>Lucky us, we can actually use a pattern match to extract the key and value nicely.</p>
 <pre>
-scala&gt; extensions.filter({case (name, extension) =&gt; extension &lt; 200})
+scala&gt; extensions.filter { case (name, extension) =&gt; extension &lt; 200 }
 res0: scala.collection.immutable.Map[String,Int] = Map((steve,100), (bob,101))
 </pre>
 <p>Why does this work? Why can you pass in a partial pattern match?</p>
 <p>Stay tuned for next week!</p>
+<h1 id="exercise">Exercise</h1>
+<p>Implement a simple version of flatMap over a List[Int] using foldRight with the signature: <code>def flatMap(l: List[Int], f: Int =&gt; List[Int])</code></p>
     </div> <!-- /container -->
 
     <div id="footer">
