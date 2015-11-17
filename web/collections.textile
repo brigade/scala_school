@@ -52,7 +52,7 @@ Seqs preserve order, can contain duplicates, and are immutable (by default). Not
 
 <pre>
 scala> val numbers = Seq(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
-numbers: Seq[Int] = Seq(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
+numbers: Seq[Int] = List(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
 
 scala> numbers(3) = 10
 <console>:9: error: value update is not a member of Seq[Int]
