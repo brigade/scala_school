@@ -13,7 +13,7 @@ This lesson covers testing with <a href="http://www.scalatest.org/">ScalaTest</a
 * "Mocks":#mocks
 * "Spies":#spies
 * "run with mvn":#mvn
-
+* "Exercise":#exercise
 
 h2(#example). WordSpec
 
@@ -92,19 +92,19 @@ h3. BeforeAndAfterEach
 Similarly, BeforeAndAfterEach can be used to perform side effects before and/or after each test.
 
 <pre>
-class BSpec extends WordSpec with Matchers with BeforeAndAfterAll {
-  val buffer = mutable.ArrayBuffer[Int]()
+class BSpec extends WordSpec with Matchers with BeforeAndAfterEach {
+  var service = null
 
-  override def before(): Unit = {
-    buffer += 1 // add an element to start
+  override def beforeEach(): Unit = {
+    service = MockService()
   }
 
-  override def afterAll(): Unit = {
-    buffer.clear()
+  override def afterEach(): Unit = {
+    service.tearDown()
   }
 
   "my code" should {
-    "do stuff with buffer" in {...}
+    "do stuff with service" in {...}
   }
 }
 </pre>
@@ -305,3 +305,23 @@ mvn test -DwildcardSuites=brigade.foo.bar.SomeSpec
 </pre>
 
 Will run just that spec.
+
+h2(#exercise). Exercise
+
+Create a spec in your project to test the very trivial <code>AlignmentStringService</code> defined below:
+
+<pre>
+trait AlignmentClient {
+  // returns alignment percentage
+  def apply(sourceProfileId: Int, targetProfileId: Int): Int
+}
+
+class AlignmentStringService(client: AlignmentClient) {
+  def apply(sourceProfileId: Int, targetProfileId: Int): String = {
+    val alignmentPercentage = client(sourceProfileId, targetProfileId)
+    s"Profile $sourceProfileId and $targetProfileId are aligned $alignmentPercentage%!"
+  }
+}
+</pre>
+
+Use a mock to mock out <code>AlignmentClient</code>, and write a couple of expectations using different matchers. Make sure the tests pass by running <code>mvn test</code>.
