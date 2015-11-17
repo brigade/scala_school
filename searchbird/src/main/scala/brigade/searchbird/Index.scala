@@ -1,28 +1,26 @@
-package com.twitter.searchbird
+package brigade.searchbird
 
-import scala.collection.mutable
-import org.apache.thrift.protocol.TBinaryProtocol
+import brigade.searchbird.thrift.{SearchbirdService, SearchbirdException}
+import com.twitter.finagle.Thrift
 
 import com.twitter.util._
-import com.twitter.conversions.time._
 import com.twitter.logging.Logger
-import com.twitter.finagle.builder.ClientBuilder
-import com.twitter.finagle.thrift.ThriftClientFramedCodec
+
+import java.util.concurrent.ConcurrentHashMap
+import scala.collection.JavaConverters._
 
 
 trait Index {
   def get(key: String): Future[String]
   def put(key: String, value: String): Future[Unit]
-  def search(key: String): Future[List[String]]
+  def search(key: String): Future[Seq[String]]
 }
 
 class ResidentIndex extends Index {
   val log = Logger.get(getClass)
 
-  val forward = new mutable.HashMap[String, String]
-    with mutable.SynchronizedMap[String, String]
-  val reverse = new mutable.HashMap[String, Set[String]]
-    with mutable.SynchronizedMap[String, Set[String]]
+  val forward = new ConcurrentHashMap[String, String].asScala
+  val reverse = new ConcurrentHashMap[String, Set[String]].asScala
 
   def get(key: String) = {
     forward.get(key) match {
@@ -60,7 +58,7 @@ class ResidentIndex extends Index {
 }
 
 class CompositeIndex(indices: Seq[Index]) extends Index {
-  require(!indices.isEmpty)
+  require(indices.nonEmpty)
 
   def get(key: String) = try {
     println("GET", key)
@@ -76,7 +74,7 @@ class CompositeIndex(indices: Seq[Index]) extends Index {
       }
     }
   } catch {
-    case e => 
+    case NonFatal(e) =>
       println("got exc", e)
       throw e
   }
@@ -86,23 +84,17 @@ class CompositeIndex(indices: Seq[Index]) extends Index {
 
   def search(query: String) = {
     val queries = indices.map { _.search(query) rescue { case _=> Future.value(Nil) } }
-    Future.collect(queries) map { results => (Set() ++ results.flatten) toList }
+    Future.collect(queries) map { results => (Set() ++ results.flatten).toList }
   }
 }
 
-class RemoteIndex(hosts: String) extends Index {
-  val transport = ClientBuilder()
-    .name("remoteIndex")
-    .hosts(hosts)
-    .codec(ThriftClientFramedCodec())
-    .hostConnectionLimit(1)
-    .timeout(500.milliseconds)
-    .build()
-  val client = new SearchbirdServiceClientAdapter(
-      new thrift.SearchbirdService.ServiceToClient(
-        transport, new TBinaryProtocol.Factory))
+class RemoteIndex(host: String) extends Index {
+  val client = Thrift.client.newIface[SearchbirdService.FutureIface](host)
 
   def get(key: String) = client.get(key)
-  def put(key: String, value: String) = client.put(key, value) map { _ => () }
-  def search(query: String) = client.search(query) map { _.toList }
+
+  def put(key: String, value: String) = client.put(key, value)
+
+  def search(query: String) = client.search(query)
 }
+

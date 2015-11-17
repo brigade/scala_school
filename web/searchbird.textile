@@ -715,10 +715,3 @@ Possible improvements to this implementation would include:
 * The current implementation sends @put()@ calls to all nodes. Instead, we could use a hash table to send a @put()@ call to only one node and distribute storage across all nodes.
 ** Note, however, we lose redundancy with this strategy. How could we maintain some redundancy yet not require full replication? 
 * We aren't doing anything interesting with any failures in the system (we aren't processing any exceptions, for instance). 
-
-fn1. The local @./sbt@ script simply guarantees that the sbt version is consistent with one that we know has all the proper libraries available.
-
-fn2. In @target/gen-scala/com/twitter/searchbird/SearchbirdService.scala@.
-
-fn3. See Ostrich's "README":https://github.com/twitter/ostrich/blob/master/README.md for more information.
-
