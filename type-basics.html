@@ -54,7 +54,6 @@
 	<li><a href="#variance">Variance</a></li>
 	<li><a href="#bounds">Bounds</a></li>
 	<li><a href="#quantification">Quantification</a></li>
-	<li><a href="#finagle">Case study: Finagle</a></li>
 </ul>
 <h2 id="background">What are static types?  Why are they useful?</h2>
 <p>According to Pierce: &#8220;A type system is a syntactic method for automatically checking the absence of certain erroneous behaviors by classifying program phrases according to the kinds of values they compute.&#8221;</p>
@@ -297,65 +296,6 @@ scala&gt; hashcodes(Seq("one", "two", "three"))
 res1: Seq[Int] = List(110182, 115276, 110339486)
 </pre>
 <p><strong>See Also</strong> <a href="http://www.drmaciver.com/2008/03/existential-types-in-scala/">Existential types in Scala by D. R. MacIver</a></p>
-<h2 id="finagle">Case study: Finagle</h2>
-<p>See: <a href="https://github.com/twitter/finagle">https://github.com/twitter/finagle</a></p>
-<pre>
-trait Service[-Req, +Rep] extends (Req =&gt; Future[Rep])
-
-trait Filter[-ReqIn, +RepOut, +ReqOut, -RepIn]
-  extends ((ReqIn, Service[ReqOut, RepIn]) =&gt; Future[RepOut])
-{
-  def andThen[Req2, Rep2](next: Filter[ReqOut, RepIn, Req2, Rep2]) =
-    new Filter[ReqIn, RepOut, Req2, Rep2] {
-      def apply(request: ReqIn, service: Service[Req2, Rep2]) = {
-        Filter.this.apply(request, new Service[ReqOut, RepIn] {
-          def apply(request: ReqOut): Future[RepIn] = next(request, service)
-          override def release() = service.release()
-          override def isAvailable = service.isAvailable
-        })
-      }
-    }
-
-  def andThen(service: Service[ReqOut, RepIn]) = new Service[ReqIn, RepOut] {
-    private[this] val refcounted = new RefcountedService(service)
-
-    def apply(request: ReqIn) = Filter.this.apply(request, refcounted)
-    override def release() = refcounted.release()
-    override def isAvailable = refcounted.isAvailable
-  }
-}
-</pre>
-<p>A service may authenticate requests with a filter.</p>
-<pre>
-trait RequestWithCredentials extends Request {
-  def credentials: Credentials
-}
-
-class CredentialsFilter(credentialsParser: CredentialsParser)
-  extends Filter[Request, Response, RequestWithCredentials, Response]
-{
-  def apply(request: Request, service: Service[RequestWithCredentials, Response]): Future[Response] = {
-    val requestWithCredentials = new RequestWrapper with RequestWithCredentials {
-      val underlying = request
-      val credentials = credentialsParser(request) getOrElse NullCredentials
-    }
-
-    service(requestWithCredentials)
-  }
-}
-</pre>
-<p>Note how the underlying service requires an authenticated request, and that this is statically verified. Filters can thus be thought of as service transformers.</p>
-<p>Many filters can be composed together:</p>
-<pre>
-val upFilter =
-  logTransaction     andThen
-  handleExceptions   andThen
-  extractCredentials andThen
-  homeUser           andThen
-  authenticate       andThen
-  route
-</pre>
-<p>Type safely!</p>
     </div> <!-- /container -->
 
     <div id="footer">

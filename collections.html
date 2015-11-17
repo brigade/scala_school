@@ -88,7 +88,7 @@ scala&gt; numbers(3) = 10
 <p>Seqs preserve order, can contain duplicates, and are immutable (by default). Note that there are actually three different kinds of Seqs: scala.collection.Seq (trait), scala.collection.mutable.Seq, scala.collection.immutable.Seq. The latter is used by default. Note that List and other collections implement the Seq trait, so it&#8217;s good practice to default to using it for immutable, ordered lists of things.</p>
 <pre>
 scala&gt; val numbers = Seq(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
-numbers: Seq[Int] = Seq(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
+numbers: Seq[Int] = List(1, 2, 3, 4, 5, 1, 2, 3, 4, 5)
 
 scala&gt; numbers(3) = 10
 &lt;console&gt;:9: error: value update is not a member of Seq[Int]

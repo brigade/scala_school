@@ -47,16 +47,16 @@
     <div class="container" style="padding-top: 60px;">
       <p>This lesson covers:</p>
 <ul>
-	<li><a href="#implicit">Implicits</a></li>
+	<li><a href="#implicit">Implicit Conversions</a></li>
 	<li><a href="#viewbounds">View bounds</a> (&#8220;type classes&#8221;)</li>
 	<li><a href="#otherbounds">Other Type Bounds</a></li>
 	<li><a href="#fbounded">F-bounded polymorphism / recursive types</a></li>
 	<li><a href="#structural">Structural types</a></li>
 	<li><a href="#abstractmem">Abstract types members</a></li>
 	<li><a href="#typetags">Type erasures &amp; type tags</a></li>
-	<li><a href="#exercise">Exercise</a></li>
+	<li><a href="#finagle">Case study: Finagle</a></li>
 </ul>
-<h2 id="implicit">Implicits</h2>
+<h2 id="implicit">Implicit Conversions</h2>
 <p><strong>Implicit functions</strong> allow automatic conversion. More precisely, they allow on-demand function application when this can help satisfy type inference. e.g.:</p>
 <pre>
 scala&gt; implicit def strToInt(x: String) = x.toInt
@@ -70,16 +70,6 @@ y: Int = 123
 
 scala&gt; math.max("123", 111)
 res1: Int = 123
-</pre>
-<p><strong>Implicit Classes</strong> allow us to enrich existing objects with new methods, sometimes called the &#8220;Pimp my Library&#8221; pattern.<br />
-All we need to do is define an implicit &#8220;wrapper&#8221; class that defines the methods we want:</p>
-<pre>
-implicit class YoDawgOnString(str: String) {
-  def yoDawg: String =
-      s"Yo dawg, I heard you like $str, so I put $str in your $str"
-      }
-
-"cookies".yoDawg
 </pre>
 <h2 id="viewbounds">View bounds (&#8220;type classes&#8221;)</h2>
 <p>View bounds, like type bounds demand such a function exists for the given type.  You specify a view bound with <code>&lt;%</code> e.g.,</p>
@@ -255,22 +245,65 @@ scala&gt; class MakeFoo[A](implicit ct: ClassTag[A]) { def make: A = ct.runtimeC
 scala&gt; (new MakeFoo[String]).make
 res10: String = ""
 </pre>
-<h2 id="exercise">Exercise</h2>
-<p>Define a method <code>times</code> on integers via implicts. This should function like<br />
-it does in ruby:</p>
+<h2 id="finagle">Case study: Finagle</h2>
+<p>See: <a href="https://github.com/twitter/finagle">https://github.com/twitter/finagle</a></p>
 <pre>
-scala&gt; 3 times { () =&gt; println("hi") }
-hi
-hi
-hi
+trait Service[-Req, +Rep] extends (Req =&gt; Future[Rep])
+
+trait Filter[-ReqIn, +RepOut, +ReqOut, -RepIn]
+  extends ((ReqIn, Service[ReqOut, RepIn]) =&gt; Future[RepOut])
+{
+  def andThen[Req2, Rep2](next: Filter[ReqOut, RepIn, Req2, Rep2]) =
+    new Filter[ReqIn, RepOut, Req2, Rep2] {
+      def apply(request: ReqIn, service: Service[Req2, Rep2]) = {
+        Filter.this.apply(request, new Service[ReqOut, RepIn] {
+          def apply(request: ReqOut): Future[RepIn] = next(request, service)
+          override def release() = service.release()
+          override def isAvailable = service.isAvailable
+        })
+      }
+    }
+
+  def andThen(service: Service[ReqOut, RepIn]) = new Service[ReqIn, RepOut] {
+    private[this] val refcounted = new RefcountedService(service)
+
+    def apply(request: ReqIn) = Filter.this.apply(request, refcounted)
+    override def release() = refcounted.release()
+    override def isAvailable = refcounted.isAvailable
+  }
+}
 </pre>
-<p>Bonus points if you can write it in such a way that the following works:</p>
+<p>A service may authenticate requests with a filter.</p>
 <pre>
-scala&gt; 3 times println("hi")
-hi
-hi
-hi
+trait RequestWithCredentials extends Request {
+  def credentials: Credentials
+}
+
+class CredentialsFilter(credentialsParser: CredentialsParser)
+  extends Filter[Request, Response, RequestWithCredentials, Response]
+{
+  def apply(request: Request, service: Service[RequestWithCredentials, Response]): Future[Response] = {
+    val requestWithCredentials = new RequestWrapper with RequestWithCredentials {
+      val underlying = request
+      val credentials = credentialsParser(request) getOrElse NullCredentials
+    }
+
+    service(requestWithCredentials)
+  }
+}
 </pre>
+<p>Note how the underlying service requires an authenticated request, and that this is statically verified. Filters can thus be thought of as service transformers.</p>
+<p>Many filters can be composed together:</p>
+<pre>
+val upFilter =
+  logTransaction     andThen
+  handleExceptions   andThen
+  extractCredentials andThen
+  homeUser           andThen
+  authenticate       andThen
+  route
+</pre>
+<p>Type safely!</p>
     </div> <!-- /container -->
 
     <div id="footer">

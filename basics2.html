@@ -47,8 +47,8 @@
     <div class="container" style="padding-top: 60px;">
       <p>This lesson covers:</p>
 <ul>
-	<li><a href="#apply">apply</a></li>
 	<li><a href="#object">objects</a></li>
+	<li><a href="#apply">apply</a></li>
 	<li><a href="#fnobj">Functions are Objects</a></li>
 	<li><a href="#package">packages</a></li>
 	<li><a href="#match">pattern matching</a></li>
@@ -56,6 +56,32 @@
 	<li><a href="#exception">try-catch-finally</a></li>
 	<li><a href="#exercise">Exercise</a></li>
 </ul>
+<h2 id="object">Objects</h2>
+<p>Objects are used to hold single instances of a class. Often used for factories.</p>
+<pre>
+object Timer {
+  var count = 0
+
+  def currentCount(): Long = {
+    count += 1
+    count
+  }
+}
+</pre>
+<p>How to use</p>
+<pre>
+scala&gt; Timer.currentCount()
+res0: Long = 1
+</pre>
+<p>Classes and Objects can have the same name.  The object is called a &#8216;Companion Object&#8217;.  We commonly use Companion Objects for Factories.</p>
+<p>Here is a trivial example that only serves to remove the need to use &#8216;new&#8217; to create an instance.</p>
+<pre>
+class Bar(foo: String)
+
+object Bar {
+  def apply(foo: String) = new Bar(foo)
+}
+</pre>
 <h2 id="apply">apply methods</h2>
 <p>apply methods give you a nice syntactic sugar for when a class or object has one main use.</p>
 <pre>
@@ -84,32 +110,6 @@ scala&gt; bar()
 res8: Int = 0
 </pre>
 <p>Here our instance object looks like we&#8217;re calling a method. More on that later!</p>
-<h2 id="object">Objects</h2>
-<p>Objects are used to hold single instances of a class. Often used for factories.</p>
-<pre>
-object Timer {
-  var count = 0
-
-  def currentCount(): Long = {
-    count += 1
-    count
-  }
-}
-</pre>
-<p>How to use</p>
-<pre>
-scala&gt; Timer.currentCount()
-res0: Long = 1
-</pre>
-<p>Classes and Objects can have the same name.  The object is called a &#8216;Companion Object&#8217;.  We commonly use Companion Objects for Factories.</p>
-<p>Here is a trivial example that only serves to remove the need to use &#8216;new&#8217; to create an instance.</p>
-<pre>
-class Bar(foo: String)
-
-object Bar {
-  def apply(foo: String) = new Bar(foo)
-}
-</pre>
 <h2 id="fnobj">Functions are Objects</h2>
 <p>In Scala, we talk about object-functional programming often.  What does that mean? What is a Function, really?</p>
 <p>A Function is a set of traits. Specifically, a function that takes one argument is an instance of a Function1 trait. This trait defines the <code>apply()</code> syntactic sugar we learned earlier, allowing you to call an object like you would a function.</p>
@@ -297,7 +297,7 @@ val result: Int = try {
 <p>This is not an example of excellent programming style, just an example of try-catch-finally resulting in expressions like most everything else in Scala.</p>
 <p>Finally will be called after an exception has been handled and is not part of the expression.</p>
 <h2 id="exercise">Exercise</h2>
-<p>Write a function that uses pattern matching to print the name of the name of a <code>Calculator</code> if it&#8217;s one of &#8220;hp&#8221;, &#8220;ti&#8221;, or &#8220;casio&#8221;. If it&#8217;s none of those, print an error message. Use the following definition of <code>Calculator</code>:</p>
+<p>Write a function that uses pattern matching to print the brand of a <code>Calculator</code> if it&#8217;s one of &#8220;hp&#8221;, &#8220;ti&#8221;, or &#8220;casio&#8221;. If it&#8217;s none of those, print an error message. Use the following definition of <code>Calculator</code>:</p>
 <pre>
 case class Calculator(brand: String, model: String)
 </pre>
