@@ -22,7 +22,16 @@ We're about to discuss some code that's not part of standard Scala. If you like 
 
 You can check out the <a href="https://twitter.github.io/finagle/">Finagle documentation</a> for reference.
 
-You can spin up a Scala console that includes Finagle by running from the <code>searchbird</code> directory:
+You can spin up a Scala console that includes Finagle by including the following dependency in your project's pom.xml file:
+<pre>
+&lt;dependency&gt;
+  &lt;groupId&gt;com.twitter&lt;/groupId&gt;
+  &lt;artifactId&gt;finagle-core_${scala.base.version}&lt;/artifactId&gt;
+  &lt;version&gt;6.30.0&lt;/version&gt;
+&lt;/dependency&gt;
+</pre>
+
+and running from the project root directory:
 
 <pre>
 $ mvn scala:console
@@ -425,35 +434,6 @@ def getThumbnails(url: String): Future[Seq[Resource]] =
 </pre>
 
 If this makes sense to you, then great. You might worry about the line <code>page.imageLinks map { u => fetch(u) }</code>: it uses <code>map</code> and the thing after the <code>map</code> returns a Future. Aren't we supposed to use flatMap when the next thing returns a Future? But notice that the thing <em>before</em> the <code>map</code> isn't a Future; it's a collection. <var>collection</var> map <var>function</var> returns a collection; we use Future.collect to gather that collection of Futures into one Future.
-
-<strong>Concurrent + Recursion</strong>
-
-Instead of fetching a page's images, we might fetch the other pages that it links to. If we then recurse on those, we have a simple web crawler.
-
-<pre>
-// Return
-def crawl(url: String): Future[Seq[Resource]] =
-  fetch(url).flatMap { page =>
-    Future
-      .collect(
-        page.links.map { u => crawl(u) }
-      )
-      .map { pps => pps.flatten }
-  }
-
-crawl("profile.html")
-   ...hangs REPL, infinite loop...
-Ctrl-C
-Execution interrupted by signal.
-
-
-scala>
-// She's gone rogue, captain! Have to take her out!
-// Calling Thread.stop on runaway Thread[Thread-93,5,main] with offending code:
-// scala> crawl("profile.html")
-</pre>
-
-In practice, this web crawler is not so useful: we didn't tell it when to stop crawling; it merrily re-fetches resources that it just fetched a moment earlier.
 
 h2(#Service). Service
 
