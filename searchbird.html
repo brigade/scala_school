@@ -85,7 +85,7 @@ I 1118 03:36:52.902 THREAD9: Finagle version 6.30.0 (rev=745578b931893c432e51da6
 ...
 </pre>
 <p>The service is served on port 9999 on our local machine, while the Admin <span class="caps">HTTP</span> interface is served on 9990. Clients can communicate with this service by connecting to port 9999.</p>
-<p>Now we&#8217;re going to instantiate and run a client using the provided <code>console</code> shell script, which instantiates a <code>SearchbirdConsoleClient</code> instance (from <code>SearchbirdConsoleClient.scala</code>). Run this script in the other window:</p>
+<p>Let&#8217;s do this now with at the Maven console:</p>
 <pre>
 $ mvn scala:console
 ...
@@ -93,8 +93,8 @@ $ mvn scala:console
 <p>Create client object <code>client</code> connected to port 9999 on our local computer, and can talk to the service that we previously started on that port. Let&#8217;s send it some requests:</p>
 <p>Note that our client class is blocking and meant for console use only, you can still access the non-blocking interface <code>client.service</code>.</p>
 <pre>
-scala&gt; import brigade.searchbird.Client
-import brigade.searchbird.Client
+scala&gt; import brigade.searchbird.BlockingClient
+import brigade.searchbird.BlockingClient
 
 scala&gt; val client = new Client()
 
@@ -105,7 +105,7 @@ org.apache.thrift.TApplicationException: Internal error processing put: 'scala.N
 <p>Great! we need to start implementing.</p>
 <p>Also, you can go http://localhost:9990/admin/ to check out our server&#8217;s admin interface.</p>
 <h5>&#8230;/Server.scala</h5>
-<p>Typing &#8220;run&#8221; in the sbt console calls <code>main</code>, which configures and instantiates this server.</p>
+<p>Executing the &#8220;./run&#8221; script compiles our code and runs the <code>main</code> method, which configures and instantiates this server.</p>
 <pre>
 object Server extends TwitterServer {
 
@@ -193,8 +193,8 @@ I 1118 03:36:52.902 THREAD9: Finagle version 6.30.0 (rev=745578b931893c432e51da6
 $ mvn scala:console
 ...
 
-scala&gt; import brigade.searchbird.Client
-import brigade.searchbird.Client
+scala&gt; import brigade.searchbird.BlockingClient
+import brigade.searchbird.BlockingClient
 
 scala&gt; val client = new Client()
 
@@ -210,7 +210,7 @@ client.put("collections", " lists maps functional combinators (map foreach filte
 client.put("pattern", " more functions! partialfunctions more pattern")
 client.put("type", " basic types and type polymorphism type inference variance bounds")
 client.put("advanced", " advanced types view bounds higher kinded types recursive types structural")
-client.put("simple", " all about sbt the standard scala build")
+client.put("maven", " all about maven, for building stuff")
 client.put("more", " tour of the scala collections")
 client.put("testing", " write tests with specs a bdd testing framework for")
 client.put("concurrency", " runnable callable threads futures twitter")
@@ -231,23 +231,25 @@ res14: Seq[String] = ArrayBuffer(java)
 &gt; client.search("functional")
 res15: Seq[String] = ArrayBuffer(collections)
 
-&gt; client.search("sbt")
-res16: Seq[String] = ArrayBuffer(simple)
+&gt; client.search("maven")
+res16: Seq[String] = ArrayBuffer(maven)
 
 &gt; client.search("types")
 res17: Seq[String] = ArrayBuffer(type, advanced)
 </pre>
-<p>Recall that if the call returns a <code>Future</code>, we have to use a blocking <code>get()</code> call to resolve the value contained within that future. We can use the <code>Future.collect</code> command to make multiple concurrent requests and wait for all of them to succeed:</p>
+<p>Our <code>BlockingClient</code> is just a thin wrapper around a standard Finagle <code>FutureIface</code> client. Let&#8217;s use that now to get some more practice with futures. Recall that if the call returns a <code>Future</code>, we have to use a blocking <code>get()</code> call to resolve the value contained within that future. We can use the <code>Future.collect</code> command to make multiple concurrent requests and wait for all of them to succeed:</p>
 <pre>
 &gt; import com.twitter.util.{Await,Future}
 ...
+&gt; val basicSearchF = client.search("basic")
+...
 &gt; val collected = Future.collect(Seq(
     client.service.search("types"),
-    client.service.search("sbt"),
+    client.service.search("maven"),
     client.service.search("functional")
   ))
 &gt; Await.result(collected)
-res18: Seq[Seq[String]] = ArrayBuffer(ArrayBuffer(type, advanced), ArrayBuffer(simple), ArrayBuffer(collections))
+res18: Seq[Seq[String]] = ArrayBuffer(ArrayBuffer(type, advanced), ArrayBuffer(maven), ArrayBuffer(collections))
 </pre>
 <h2>Bonus: backing our service with a database</h2>
 <p>While MySQL would not be a great solution for a real-life search engine. Practice non-blocking DB access by adding <code>finagle-mysql</code> to you project and back your service with a database.</p>
