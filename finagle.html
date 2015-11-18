@@ -59,15 +59,7 @@
 <h2 id="repl">Finagle-Friendly <span class="caps">REPL</span></h2>
 <p>We&#8217;re about to discuss some code that&#8217;s not part of standard Scala. If you like to use the <span class="caps">REPL</span> to learn, you might wonder how to get a Scala <span class="caps">REPL</span> that knows about Twitter&#8217;s Finagle and things it depends on.</p>
 <p>You can check out the <a href="https://twitter.github.io/finagle/">Finagle documentation</a> for reference.</p>
-<p>You can spin up a Scala console that includes Finagle by including the following dependency in your project&#8217;s pom.xml file:<br />
-<pre><br />
-&lt;dependency&gt;<br />
-  &lt;groupId&gt;com.twitter&lt;/groupId&gt;<br />
-  &lt;artifactId&gt;finagle-core_${scala.base.version}&lt;/artifactId&gt;<br />
-  &lt;version&gt;6.30.0&lt;/version&gt;<br />
-&lt;/dependency&gt;<br />
-</pre></p>
-<p>and running from the project root directory:</p>
+<p>You can spin up a Scala console that includes Finagle by running from the <code>searchbird</code> directory:</p>
 <pre>
 $ mvn scala:console
  ...build output...
@@ -414,6 +406,31 @@ def getThumbnails(url: String): Future[Seq[Resource]] =
   }
 </pre>
 <p>If this makes sense to you, then great. You might worry about the line <code>page.imageLinks map { u =&gt; fetch(u) }</code>: it uses <code>map</code> and the thing after the <code>map</code> returns a Future. Aren&#8217;t we supposed to use flatMap when the next thing returns a Future? But notice that the thing <em>before</em> the <code>map</code> isn&#8217;t a Future; it&#8217;s a collection. <var>collection</var> map <var>function</var> returns a collection; we use Future.collect to gather that collection of Futures into one Future.</p>
+<p><strong>Concurrent + Recursion</strong></p>
+<p>Instead of fetching a page&#8217;s images, we might fetch the other pages that it links to. If we then recurse on those, we have a simple web crawler.</p>
+<pre>
+// Return
+def crawl(url: String): Future[Seq[Resource]] =
+  fetch(url).flatMap { page =&gt;
+    Future
+      .collect(
+        page.links.map { u =&gt; crawl(u) }
+      )
+      .map { pps =&gt; pps.flatten }
+  }
+
+crawl("profile.html")
+   ...hangs REPL, infinite loop...
+Ctrl-C
+Execution interrupted by signal.
+
+
+scala&gt;
+// She's gone rogue, captain! Have to take her out!
+// Calling Thread.stop on runaway Thread[Thread-93,5,main] with offending code:
+// scala&gt; crawl("profile.html")
+</pre>
+<p>In practice, this web crawler is not so useful: we didn&#8217;t tell it when to stop crawling; it merrily re-fetches resources that it just fetched a moment earlier.</p>
 <h2 id="Service">Service</h2>
 <p>A Finagle <code>Service</code> represents a service that handles RPCs, taking requests and giving back replies. A Service is a function <code>Req =&gt; Future[Rep]</code> for some request and reply types.</p>
 <blockquote>
