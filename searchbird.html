@@ -249,9 +249,25 @@ res17: Seq[String] = ArrayBuffer(type, advanced)
 &gt; Await.result(collected)
 res18: Seq[Seq[String]] = ArrayBuffer(ArrayBuffer(type, advanced), ArrayBuffer(simple), ArrayBuffer(collections))
 </pre>
-<h2>Bonus Points: backing our service with a database</h2>
+<h2>Bonus: backing our service with a database</h2>
 <p>While MySQL would not be a great solution for a real-life search engine. Practice non-blocking DB access by adding <code>finagle-mysql</code> to you project and back your service with a database.</p>
-<h2>Even more Bonus Points: distributing our service</h2>
+<pre>
+&lt;dependency&gt;
+  &lt;groupId&gt;com.twitter&lt;/groupId&gt;
+  &lt;artifactId&gt;finagle-mysql_${scala.base.version}&lt;/artifactId&gt;
+  &lt;version&gt;6.30.0&lt;/version&gt;
+&lt;/dependency&gt;
+</pre>
+<h2>Bonus 2: wrap our service in a <span class="caps">JSON</span> <span class="caps">API</span></h2>
+<p>While Thrift is excellent for machine-to-machine communication, humans may want to interact with our service via <span class="caps">HTTP</span>. Add <code>finagle-http</code> to our project and create <span class="caps">HTTP</span> endpoints for our thrift methods</p>
+<pre>
+&lt;dependency&gt;
+  &lt;groupId&gt;com.twitter&lt;/groupId&gt;
+  &lt;artifactId&gt;finagle-http_${scala.base.version}&lt;/artifactId&gt;
+  &lt;version&gt;6.30.0&lt;/version&gt;
+&lt;/dependency&gt;
+</pre>
+<h2>Bonus 3: distributing our service</h2>
 <p>On a single machine, our simple in-memory search engine won&#8217;t be able to search a corpus larger than the size of memory. We&#8217;ll now venture to remedy this by distributing nodes with a simple sharding scheme. Here&#8217;s the block diagram:</p>
 <p><img src="searchbird-3.svg" title="Distributed Searchbird service" alt="Distributed Searchbird service" /></p>
 <h3>Abstracting</h3>
