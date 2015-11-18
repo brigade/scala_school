@@ -4,7 +4,7 @@ import brigade.searchbird.thrift.SearchbirdService
 import com.twitter.finagle.Thrift
 import com.twitter.util.Await
 
-class Client {
+class BlockingClient {
   val service = Thrift.client.newIface[SearchbirdService.FutureIface]("localhost:9999")
 
   def get(key: String) = Await.result(service.get(key))

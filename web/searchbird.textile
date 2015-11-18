@@ -60,7 +60,7 @@ I 1118 03:36:52.902 THREAD9: Finagle version 6.30.0 (rev=745578b931893c432e51da6
 
 The service is served on port 9999 on our local machine, while the Admin HTTP interface is served on 9990. Clients can communicate with this service by connecting to port 9999.
 
-Now we're going to instantiate and run a client using the provided @console@ shell script, which instantiates a @SearchbirdConsoleClient@ instance (from @SearchbirdConsoleClient.scala@). Run this script in the other window:
+Let's do this now with at the Maven console:
 
 <pre>
 $ mvn scala:console
@@ -72,8 +72,8 @@ Create client object @client@ connected to port 9999 on our local computer, and 
 Note that our client class is blocking and meant for console use only, you can still access the non-blocking interface @client.service@.
 
 <pre>
-scala> import brigade.searchbird.Client
-import brigade.searchbird.Client
+scala> import brigade.searchbird.BlockingClient
+import brigade.searchbird.BlockingClient
 
 scala> val client = new Client()
 
@@ -88,7 +88,7 @@ Also, you can go http://localhost:9990/admin/ to check out our server's admin in
 
 h5. .../Server.scala
 
-Typing "run" in the sbt console calls @main@, which configures and instantiates this server.
+Executing the "./run" script compiles our code and runs the @main@ method, which configures and instantiates this server.
 
 <pre>
 object Server extends TwitterServer {
@@ -203,8 +203,8 @@ And then from the searchbird directory, start up a client:
 $ mvn scala:console
 ...
 
-scala> import brigade.searchbird.Client
-import brigade.searchbird.Client
+scala> import brigade.searchbird.BlockingClient
+import brigade.searchbird.BlockingClient
 
 scala> val client = new Client()
 
@@ -222,7 +222,7 @@ client.put("collections", " lists maps functional combinators (map foreach filte
 client.put("pattern", " more functions! partialfunctions more pattern")
 client.put("type", " basic types and type polymorphism type inference variance bounds")
 client.put("advanced", " advanced types view bounds higher kinded types recursive types structural")
-client.put("simple", " all about sbt the standard scala build")
+client.put("maven", " all about maven, for building stuff")
 client.put("more", " tour of the scala collections")
 client.put("testing", " write tests with specs a bdd testing framework for")
 client.put("concurrency", " runnable callable threads futures twitter")
@@ -245,25 +245,27 @@ res14: Seq[String] = ArrayBuffer(java)
 > client.search("functional")
 res15: Seq[String] = ArrayBuffer(collections)
 
-> client.search("sbt")
-res16: Seq[String] = ArrayBuffer(simple)
+> client.search("maven")
+res16: Seq[String] = ArrayBuffer(maven)
 
 > client.search("types")
 res17: Seq[String] = ArrayBuffer(type, advanced)
 </pre>
 
-Recall that if the call returns a @Future@, we have to use a blocking @get()@ call to resolve the value contained within that future. We can use the @Future.collect@ command to make multiple concurrent requests and wait for all of them to succeed:
+Our @BlockingClient@ is just a thin wrapper around a standard Finagle @FutureIface@ client. Let's use that now to get some more practice with futures. Recall that if the call returns a @Future@, we have to use a blocking @get()@ call to resolve the value contained within that future. We can use the @Future.collect@ command to make multiple concurrent requests and wait for all of them to succeed:
 
 <pre>
 > import com.twitter.util.{Await,Future}
 ...
+> val basicSearchF = client.search("basic")
+...
 > val collected = Future.collect(Seq(
     client.service.search("types"),
-    client.service.search("sbt"),
+    client.service.search("maven"),
     client.service.search("functional")
   ))
 > Await.result(collected)
-res18: Seq[Seq[String]] = ArrayBuffer(ArrayBuffer(type, advanced), ArrayBuffer(simple), ArrayBuffer(collections))
+res18: Seq[Seq[String]] = ArrayBuffer(ArrayBuffer(type, advanced), ArrayBuffer(maven), ArrayBuffer(collections))
 </pre>
 
 h2. Bonus: backing our service with a database
